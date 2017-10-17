@@ -63,6 +63,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static io.crate.planner.operators.Limit.limitAndOffset;
+import static io.crate.planner.operators.LogicalPlanner.extractColumns;
 import static io.crate.planner.operators.OperatorUtils.getUnusedColumns;
 
 /**
@@ -89,6 +90,11 @@ class Collect implements LogicalPlan {
     final TableInfo tableInfo;
     private final List<AbstractTableRelation> baseTables;
     private final long numExpectedRows;
+
+    public static Builder create(QueriedTableRelation relation, List<Symbol> toCollect, WhereClause where) {
+        return (tableStats, usedColumns) -> new Collect(
+            relation, toCollect, where, usedColumns, tableStats.numDocs(relation.tableRelation().tableInfo().ident()));
+    }
 
     Collect(QueriedTableRelation relation,
             List<Symbol> toCollect,
@@ -119,6 +125,7 @@ class Collect implements LogicalPlan {
                                                            List<Symbol> toCollect,
                                                            Set<Symbol> usedColumns) {
 
+        usedColumns = extractColumns(usedColumns);
         List<Symbol> unusedCols = getUnusedColumns(toCollect, usedColumns);
 
         ArrayList<Symbol> fetchable = new ArrayList<>();

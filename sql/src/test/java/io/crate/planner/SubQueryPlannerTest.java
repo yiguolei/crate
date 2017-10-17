@@ -41,12 +41,12 @@ import io.crate.testing.SQLExecutor;
 import io.crate.testing.T3;
 import org.hamcrest.Matchers;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.List;
 
 import static io.crate.testing.ProjectionMatchers.isTopN;
+import static io.crate.testing.SymbolMatchers.isReference;
 import static io.crate.testing.TestingHelpers.isSQL;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.instanceOf;
@@ -118,7 +118,6 @@ public class SubQueryPlannerTest extends CrateDummyClusterServiceUnitTest {
     }
 
     @Test
-    @Ignore("xx is collected as add(x, x) instead of just one x")
     public void testSimpleSubSelectWithLateFetchWhereClauseMatchesQueryColumn() throws Exception {
         QueryThenFetch qtf = e.plan(
             "select xx, i from (select x + x as xx, i from t1 order by x asc limit 10) ti " +
@@ -133,6 +132,7 @@ public class SubQueryPlannerTest extends CrateDummyClusterServiceUnitTest {
             instanceOf(FetchProjection.class)
         ));
         FilterProjection filterProjection = (FilterProjection) projections.get(1);
+        assertThat(collect.collectPhase().toCollect(), contains(isReference("x")));
         // filter is before fetch; preFetchOutputs: [_fetchId, x]
         assertThat(filterProjection.query(), isSQL("(add(INPUT(1), INPUT(1)) = 10)"));
     }

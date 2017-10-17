@@ -26,7 +26,6 @@ import io.crate.analyze.OrderBy;
 import io.crate.analyze.relations.AbstractTableRelation;
 import io.crate.analyze.relations.QueriedRelation;
 import io.crate.analyze.symbol.Field;
-import io.crate.analyze.symbol.RefVisitor;
 import io.crate.analyze.symbol.Symbol;
 import io.crate.planner.MultiPhasePlan;
 import io.crate.planner.Plan;
@@ -39,6 +38,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 
 /**
@@ -57,6 +57,34 @@ public class RelationBoundary implements LogicalPlan {
 
     public static LogicalPlan.Builder create(LogicalPlan.Builder sourceBuilder, QueriedRelation relation) {
         return (tableStats, usedBeforeNextFetch) -> {
+
+            /*
+             * Need to:
+             *     a) Translate usedColumns
+             *
+             *     b) If columns are fetched later:
+             *        Safe scalars to expressionMapping() so that they can be applied after the fetch
+             *                                                                                  *
+             *     c) If columns are immediately collected: Apply the scalar as part of a eval projection,
+             *        So that parent operators have the values available
+             *
+             * Example:
+             *
+             * select xx, yy from (select x + x as xx, y + y as yy from t1 ...) tt where xx = 10
+             *                     ^^^^^^^^^^^^^^^^^^
+             *                     RelationBoundary for this
+             *
+             * relation.fields:     [ F.xx, F.yy ]
+             * relation.outputs:    [ R.x + R.x, R.y + F.y ]
+             * usedBeforeNextFetch: [ F.xx ]                        -- translated and unique cols extracted --> R.x
+             * expressionMapping:   { F.xx: R.x + R.x,
+             *                        F.yy: R.y + R.y }
+             *
+             * sourceOutputs:       [ R._fetchId, R.x ]
+             *                              | evalProjection ( IC(0), add(IC(1), IC(1))
+             *                              |
+             * outputs:             [ F._fetchId, F.xx ]            -- mappedSource columns + usedColumns
+             */
             HashMap<Symbol, Symbol> expressionMapping = new HashMap<>();
             for (Field field : relation.fields()) {
                 expressionMapping.put(
@@ -68,30 +96,29 @@ public class RelationBoundary implements LogicalPlan {
             for (Symbol beforeNextFetch : usedBeforeNextFetch) {
                 mappedUsedColumns.add(mapper.apply(beforeNextFetch));
             }
-            return new RelationBoundary(sourceBuilder.build(tableStats, mappedUsedColumns), relation);
+            return new RelationBoundary(
+                sourceBuilder.build(tableStats, mappedUsedColumns),
+                relation,
+                usedBeforeNextFetch,
+                expressionMapping
+            );
         };
     }
 
-    private RelationBoundary(LogicalPlan source, QueriedRelation relation) {
+    private RelationBoundary(LogicalPlan source,
+                             QueriedRelation relation,
+                             Set<Symbol> usedBeforeNextFetch,
+                             Map<Symbol, Symbol> expressionMapping) {
         this.expressionMapping = new HashMap<>();
+        this.expressionMapping.putAll(expressionMapping);
         this.source = source;
         this.relation = relation;
-        HashMap<Symbol, Symbol> reverseMapping = new HashMap<>();
-        for (Field field : relation.fields()) {
-            Symbol value = ((QueriedRelation) field.relation()).querySpec().outputs().get(field.index());
-            expressionMapping.put(field, value);
-            reverseMapping.put(value, field);
-        }
-        for (Symbol symbol : source.outputs()) {
-            RefVisitor.visitRefs(symbol, r -> {
-                Field field = new Field(relation, r.ident().columnIdent(), r.valueType());
-                if (reverseMapping.putIfAbsent(r, field) == null) {
-                    expressionMapping.put(field, r);
-                }
-            });
-        }
-        this.outputs = OperatorUtils.mappedSymbols(source.outputs(), reverseMapping);
-        expressionMapping.putAll(source.expressionMapping());
+        this.outputs = generateOutputs(source.outputs(), usedBeforeNextFetch, expressionMapping);
+    }
+
+    private static List<Symbol> generateOutputs(List<Symbol> sourceOutputs,
+                                                Set<Symbol> usedBeforeNextFetch,
+                                                Map<Symbol, Symbol> expressionMapping) {
     }
 
     @Override
