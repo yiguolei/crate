@@ -34,12 +34,15 @@ import io.crate.planner.SubqueryPlanner;
 import io.crate.planner.projection.builder.ProjectionBuilder;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
+
+import static io.crate.planner.operators.LogicalPlanner.extractColumns;
 
 /**
  * An Operator that marks the boundary of a relation.
@@ -97,7 +100,7 @@ public class RelationBoundary implements LogicalPlan {
                 mappedUsedColumns.add(mapper.apply(beforeNextFetch));
             }
             return new RelationBoundary(
-                sourceBuilder.build(tableStats, mappedUsedColumns),
+                sourceBuilder.build(tableStats, extractColumns(mappedUsedColumns)),
                 relation,
                 usedBeforeNextFetch,
                 expressionMapping
@@ -111,14 +114,20 @@ public class RelationBoundary implements LogicalPlan {
                              Map<Symbol, Symbol> expressionMapping) {
         this.expressionMapping = new HashMap<>();
         this.expressionMapping.putAll(expressionMapping);
+        this.expressionMapping.putAll(source.expressionMapping());
         this.source = source;
         this.relation = relation;
-        this.outputs = generateOutputs(source.outputs(), usedBeforeNextFetch, expressionMapping);
+        this.outputs = OperatorUtils.mappedSymbols(new ArrayList<>(usedBeforeNextFetch), expressionMapping);
     }
 
-    private static List<Symbol> generateOutputs(List<Symbol> sourceOutputs,
-                                                Set<Symbol> usedBeforeNextFetch,
-                                                Map<Symbol, Symbol> expressionMapping) {
+    private RelationBoundary(LogicalPlan source,
+                            QueriedRelation relation,
+                            List<Symbol> outputs,
+                            HashMap<Symbol, Symbol> expressionMapping) {
+        this.expressionMapping = expressionMapping;
+        this.source = source;
+        this.relation = relation;
+        this.outputs = outputs;
     }
 
     @Override
@@ -141,7 +150,7 @@ public class RelationBoundary implements LogicalPlan {
         if (collapsed == source) {
             return this;
         }
-        return new RelationBoundary(source, relation);
+        return new RelationBoundary(source, relation, outputs, expressionMapping);
     }
 
     @Override
