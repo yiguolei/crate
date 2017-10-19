@@ -34,7 +34,7 @@ import java.io.IOException;
 public class BytesRefColumnReference extends FieldCacheExpression<IndexOrdinalsFieldData, BytesRef> {
 
     private RandomAccessOrds values;
-    private BytesRef value;
+    private int docId;
 
     public BytesRefColumnReference(String columnName, MappedFieldType mappedFieldType) {
         super(columnName, mappedFieldType);
@@ -42,23 +42,20 @@ public class BytesRefColumnReference extends FieldCacheExpression<IndexOrdinalsF
 
     @Override
     public BytesRef value() throws ValidationException {
-        return value;
+        values.setDocument(docId);
+        switch (values.cardinality()) {
+            case 0:
+                return null;
+            case 1:
+                return BytesRef.deepCopyOf(values.lookupOrd(values.ordAt(0)));
+            default:
+                throw new GroupByOnArrayUnsupportedException(columnName);
+        }
     }
 
     @Override
     public void setNextDocId(int docId) {
-        super.setNextDocId(docId);
-        values.setDocument(docId);
-        switch (values.cardinality()) {
-            case 0:
-                value = null;
-                break;
-            case 1:
-                value = BytesRef.deepCopyOf(values.lookupOrd(values.ordAt(0)));
-                break;
-            default:
-                throw new GroupByOnArrayUnsupportedException(columnName);
-        }
+        this.docId = docId;
     }
 
     @Override

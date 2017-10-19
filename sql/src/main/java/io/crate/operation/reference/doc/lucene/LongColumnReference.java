@@ -31,7 +31,7 @@ import java.io.IOException;
 public class LongColumnReference extends LuceneCollectorExpression<Long> {
 
     private SortedNumericDocValues values;
-    private Long value;
+    private int docId;
 
     public LongColumnReference(String columnName) {
         super(columnName);
@@ -39,28 +39,24 @@ public class LongColumnReference extends LuceneCollectorExpression<Long> {
 
     @Override
     public Long value() {
-        return value;
-    }
-
-    @Override
-    public void setNextDocId(int docId) {
-        super.setNextDocId(docId);
         values.setDocument(docId);
         switch (values.count()) {
             case 0:
-                value = null;
-                break;
+                return null;
             case 1:
-                value = values.valueAt(0);
-                break;
+                return values.valueAt(0);
             default:
                 throw new GroupByOnArrayUnsupportedException(columnName);
         }
     }
 
     @Override
+    public void setNextDocId(int docId) {
+        this.docId = docId;
+    }
+
+    @Override
     public void setNextReader(LeafReaderContext context) throws IOException {
-        super.setNextReader(context);
         values = DocValues.getSortedNumeric(context.reader(), columnName);
     }
 
