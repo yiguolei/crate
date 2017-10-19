@@ -54,6 +54,19 @@ public class BytesRefColumnReference extends FieldCacheExpression<IndexOrdinalsF
     }
 
     @Override
+    public BytesRef sharedValue() {
+        values.setDocument(docId);
+        switch (values.cardinality()) {
+            case 0:
+                return null;
+            case 1:
+                return values.lookupOrd(values.ordAt(0));
+            default:
+                throw new GroupByOnArrayUnsupportedException(columnName);
+        }
+    }
+
+    @Override
     public void setNextDocId(int docId) {
         this.docId = docId;
     }

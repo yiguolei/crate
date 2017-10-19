@@ -30,11 +30,11 @@ import io.crate.analyze.symbol.ValueSymbolVisitor;
 import io.crate.breaker.RamAccountingContext;
 import io.crate.data.Input;
 import io.crate.metadata.BaseFunctionResolver;
-import io.crate.metadata.functions.params.FuncParams;
 import io.crate.metadata.FunctionIdent;
 import io.crate.metadata.FunctionImplementation;
 import io.crate.metadata.FunctionInfo;
 import io.crate.metadata.TransactionContext;
+import io.crate.metadata.functions.params.FuncParams;
 import io.crate.metadata.functions.params.Param;
 import io.crate.operation.aggregation.AggregationFunction;
 import io.crate.types.DataType;
@@ -90,7 +90,7 @@ public class CountAggregation extends AggregationFunction<CountAggregation.LongS
 
     @Override
     public LongState iterate(RamAccountingContext ramAccountingContext, LongState state, Input... args) {
-        if (!hasArgs || args[0].value() != null) {
+        if (!hasArgs || args[0].sharedValue() != null) {
             return state.add(1L);
         }
         return state;

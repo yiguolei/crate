@@ -47,6 +47,11 @@ public class InputRow implements Row {
     }
 
     @Override
+    public Object getShared(int index) {
+        return inputs.get(index).sharedValue();
+    }
+
+    @Override
     public Object[] materialize() {
         return Buckets.materialize(this);
     }

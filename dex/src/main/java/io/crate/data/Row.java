@@ -67,6 +67,10 @@ public interface Row {
      */
     Object get(int index);
 
+    default Object getShared(int index) {
+        return get(index);
+    }
+
     /**
      * Returns a materialized view of this row.
      */
