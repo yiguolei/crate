@@ -49,7 +49,6 @@ public class VersionCollectorExpression extends LuceneCollectorExpression<Long> 
     @Override
     public void setNextDocId(int doc) {
         if (versions != null) {
-            value = versions.get(doc);
         }
     }
 

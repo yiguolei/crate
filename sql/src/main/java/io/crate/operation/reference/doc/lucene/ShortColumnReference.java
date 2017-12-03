@@ -21,7 +21,6 @@
 
 package io.crate.operation.reference.doc.lucene;
 
-import io.crate.exceptions.GroupByOnArrayUnsupportedException;
 import org.apache.lucene.index.DocValues;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.SortedNumericDocValues;
@@ -45,17 +44,6 @@ public class ShortColumnReference extends LuceneCollectorExpression<Short> {
     @Override
     public void setNextDocId(int docId) {
         super.setNextDocId(docId);
-        values.setDocument(docId);
-        switch (values.count()) {
-            case 0:
-                value = null;
-                break;
-            case 1:
-                value = (short) values.valueAt(0);
-                break;
-            default:
-                throw new GroupByOnArrayUnsupportedException(columnName);
-        }
     }
 
     @Override

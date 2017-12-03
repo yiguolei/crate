@@ -277,7 +277,7 @@ public class TransportShardUpsertAction extends TransportShardAction<ShardUpsert
         GetResult getResult = indexShard.getService().get(
             request.type(),
             item.id(),
-            new String[]{RoutingFieldMapper.NAME, ParentFieldMapper.NAME, TTLFieldMapper.NAME},
+            new String[]{RoutingFieldMapper.NAME, ParentFieldMapper.NAME},
             true,
             Versions.MATCH_ANY,
             VersionType.INTERNAL,

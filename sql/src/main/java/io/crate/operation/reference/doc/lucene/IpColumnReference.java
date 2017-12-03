@@ -22,7 +22,6 @@
 package io.crate.operation.reference.doc.lucene;
 
 
-import io.crate.exceptions.GroupByOnArrayUnsupportedException;
 import org.apache.lucene.index.DocValues;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.SortedDocValues;
@@ -67,24 +66,43 @@ public class IpColumnReference extends LuceneCollectorExpression<BytesRef> {
         } else {
             values = new SortedDocValues() {
                 @Override
-                public int getOrd(int docID) {
-                    setDocValues.setDocument(docID);
-                    int ord = (int) setDocValues.nextOrd();
-
-                    if (setDocValues.nextOrd() != SortedSetDocValues.NO_MORE_ORDS) {
-                        throw new GroupByOnArrayUnsupportedException(columnName);
-                    }
-                    return ord;
+                public int ordValue() throws IOException {
+                    return 0;
                 }
 
                 @Override
-                public BytesRef lookupOrd(int ord) {
-                    return setDocValues.lookupOrd(ord);
+                public BytesRef lookupOrd(int ord) throws IOException {
+                    return null;
                 }
 
                 @Override
                 public int getValueCount() {
-                    return (int) setDocValues.getValueCount();
+                    return 0;
+                }
+
+                @Override
+                public boolean advanceExact(int target) throws IOException {
+                    return false;
+                }
+
+                @Override
+                public int docID() {
+                    return 0;
+                }
+
+                @Override
+                public int nextDoc() throws IOException {
+                    return 0;
+                }
+
+                @Override
+                public int advance(int target) throws IOException {
+                    return 0;
+                }
+
+                @Override
+                public long cost() {
+                    return 0;
                 }
             };
         }

@@ -66,7 +66,7 @@ public class NodeSysExpression extends NestedObjectExpression {
         childImplementations.put(SysNodesTableInfo.SYS_COL_ID,
             new NodeIdExpression(clusterService));
         childImplementations.put(SysNodesTableInfo.SYS_COL_NODE_NAME,
-            new NodeNameExpression(discovery));
+            new NodeNameExpression(() -> clusterService.localNode().getName()));
         childImplementations.put(SysNodesTableInfo.SYS_COL_PORT, new NodePortExpression(
             () -> httpServerTransport == null ? null : httpServerTransport.info().getAddress().publishAddress(),
             () -> clusterService.localNode().getAddress()

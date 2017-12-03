@@ -21,7 +21,6 @@
 
 package io.crate.operation.reference.doc.lucene;
 
-import io.crate.exceptions.GroupByOnArrayUnsupportedException;
 import org.apache.lucene.index.DocValues;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.util.BytesRef;
@@ -48,17 +47,6 @@ public class BooleanColumnReference extends LuceneCollectorExpression<Boolean> {
     @Override
     public void setNextDocId(int docId) {
         super.setNextDocId(docId);
-        values.setDocument(docId);
-        switch (values.count()) {
-            case 0:
-                value = null;
-                break;
-            case 1:
-                value = values.valueAt(0).compareTo(TRUE_BYTESREF) == 0;
-                break;
-            default:
-                throw new GroupByOnArrayUnsupportedException(columnName);
-        }
     }
 
     @Override

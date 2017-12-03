@@ -21,9 +21,7 @@
 
 package io.crate.operation.reference.doc.lucene;
 
-import io.crate.exceptions.GroupByOnArrayUnsupportedException;
 import org.apache.lucene.index.LeafReaderContext;
-import org.elasticsearch.common.geo.GeoPoint;
 import org.elasticsearch.index.fielddata.IndexGeoPointFieldData;
 import org.elasticsearch.index.fielddata.MultiGeoPointValues;
 import org.elasticsearch.index.mapper.MappedFieldType;
@@ -47,18 +45,6 @@ public class GeoPointColumnReference extends FieldCacheExpression<IndexGeoPointF
     @Override
     public void setNextDocId(int docId) {
         super.setNextDocId(docId);
-        values.setDocument(docId);
-        switch (values.count()) {
-            case 0:
-                value = null;
-                break;
-            case 1:
-                GeoPoint gp = values.valueAt(0);
-                value = new Double[]{gp.lon(), gp.lat()};
-                break;
-            default:
-                throw new GroupByOnArrayUnsupportedException(columnName);
-        }
     }
 
     @Override

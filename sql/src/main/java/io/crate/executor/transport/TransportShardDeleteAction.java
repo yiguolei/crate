@@ -132,15 +132,20 @@ public class TransportShardDeleteAction extends TransportShardAction<ShardDelete
                 break;
             }
 
+            /*
+            TODO:
             Engine.Delete delete = indexShard.prepareDeleteOnReplica(request.type(), item.id(), item.version(), item.versionType());
             Engine.DeleteResult deleteResult = indexShard.delete(delete);
             translogLocation = deleteResult.getTranslogLocation();
             logger.trace("{} REPLICA: successfully deleted [{}]/[{}]", request.shardId(), request.type(), item.id());
+            */
         }
         return new WriteReplicaResult<>(request, translogLocation, null, indexShard, logger);
     }
 
     private Engine.DeleteResult shardDeleteOperationOnPrimary(ShardDeleteRequest request, ShardDeleteRequest.Item item, IndexShard indexShard) throws IOException {
+        /*
+        TODO
         Engine.Delete delete = indexShard.prepareDeleteOnPrimary(request.type(), item.id(), item.version(), item.versionType());
         Engine.DeleteResult deleteResult = indexShard.delete(delete);
         // update the request with the version so it will go to the replicas
@@ -149,5 +154,7 @@ public class TransportShardDeleteAction extends TransportShardAction<ShardDelete
 
         assert item.versionType().validateVersionForWrites(item.version()) : "item.version() must be valid";
         return deleteResult;
+        */
+        return null;
     }
 }
