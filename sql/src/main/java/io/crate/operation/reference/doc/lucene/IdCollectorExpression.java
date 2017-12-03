@@ -23,7 +23,7 @@ package io.crate.operation.reference.doc.lucene;
 
 import io.crate.metadata.doc.DocSysColumns;
 import org.apache.lucene.index.LeafReaderContext;
-import org.apache.lucene.index.RandomAccessOrds;
+import org.apache.lucene.index.SortedSetDocValues;
 import org.apache.lucene.util.BytesRef;
 import org.elasticsearch.index.fielddata.IndexOrdinalsFieldData;
 import org.elasticsearch.index.mapper.MappedFieldType;
@@ -34,7 +34,7 @@ public class IdCollectorExpression extends FieldCacheExpression<IndexOrdinalsFie
 
     public static final String COLUMN_NAME = DocSysColumns.ID.name();
 
-    private RandomAccessOrds values;
+    private SortedSetDocValues values;
     private BytesRef value;
 
     public IdCollectorExpression(MappedFieldType mappedFieldType) {
@@ -43,13 +43,10 @@ public class IdCollectorExpression extends FieldCacheExpression<IndexOrdinalsFie
 
     @Override
     public void setNextDocId(int doc) {
-        values.setDocument(doc);
-        switch (values.cardinality()) {
-            case 1:
-                value = BytesRef.deepCopyOf(values.lookupOrd(values.ordAt(0)));
-                break;
-            default:
-                throw new IllegalStateException(columnName + " must only have a single value");
+        try {
+            value = BytesRef.deepCopyOf(values.lookupOrd(doc));
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 

@@ -34,6 +34,7 @@ import org.elasticsearch.common.bytes.BytesArray;
 import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.lease.Releasable;
 import org.elasticsearch.common.logging.Loggers;
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.util.CancellableThreads;
 import org.elasticsearch.index.shard.IndexShard;
 import org.elasticsearch.index.shard.IndexShardClosedException;
@@ -78,6 +79,7 @@ public class BlobRecoveryHandler extends RecoverySourceHandler {
 
 
     public BlobRecoveryHandler(IndexShard shard,
+                               Settings nodesetting,
                                RecoveryTargetHandler recoveryTarget,
                                StartRecoveryRequest request,
                                Supplier<Long> currentClusterStateVersionSupplier,
@@ -87,7 +89,8 @@ public class BlobRecoveryHandler extends RecoverySourceHandler {
                                final TransportService transportService,
                                BlobTransferTarget blobTransferTarget,
                                BlobIndicesService blobIndicesService) {
-        super(shard, recoveryTarget, request, currentClusterStateVersionSupplier, delayNewRecoveries, fileChunkSizeInBytes, logger);
+        super(shard, recoveryTarget, request, 0, nodesetting);
+        //super(shard, recoveryTarget, request, currentClusterStateVersionSupplier, delayNewRecoveries, fileChunkSizeInBytes, logger);
         assert BlobIndex.isBlobIndex(shard.shardId().getIndexName()) : "Shard must belong to a blob index";
         this.blobShard = blobIndicesService.blobShardSafe(request.shardId());
         this.request = request;
@@ -124,7 +127,8 @@ public class BlobRecoveryHandler extends RecoverySourceHandler {
         return result;
     }
 
-    @Override
+    // TODO:
+    //@Override
     protected void phase1Hook() throws Exception {
         logger.debug("[{}][{}] recovery [phase1] to {}: start",
             request.shardId().getIndexName(), request.shardId().id(), request.targetNode().getName());

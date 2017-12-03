@@ -26,10 +26,10 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import io.crate.action.sql.BaseResultReceiver;
 import io.crate.action.sql.Option;
-import io.crate.action.sql.Session;
 import io.crate.action.sql.ResultReceiver;
 import io.crate.action.sql.SQLActionException;
 import io.crate.action.sql.SQLOperations;
+import io.crate.action.sql.Session;
 import io.crate.action.sql.parser.SQLXContentSourceContext;
 import io.crate.action.sql.parser.SQLXContentSourceParser;
 import io.crate.analyze.symbol.Field;
@@ -100,6 +100,11 @@ public class RestSQLAction extends BaseRestHandler {
             channel,
             new SQLActionException(errorMsg, 4000, RestStatus.BAD_REQUEST)
         ));
+    }
+
+    @Override
+    public String getName() {
+        return "sql";
     }
 
     @Override

@@ -58,4 +58,9 @@ public class StartBlobRequest extends BlobTransferRequest<StartBlobRequest> {
         out.write(digest);
     }
 
+    @Override
+    public String toString() {
+        return "StartBlobRequest";
+    }
+
 }

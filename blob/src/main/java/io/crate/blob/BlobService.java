@@ -22,13 +22,11 @@
 package io.crate.blob;
 
 import io.crate.blob.exceptions.MissingHTTPEndpointException;
-import io.crate.blob.recovery.BlobRecoveryHandler;
 import io.crate.blob.transfer.BlobHeadRequestHandler;
 import io.crate.blob.v2.BlobIndex;
 import io.crate.blob.v2.BlobIndicesService;
 import io.crate.plugin.PipelineRegistry;
 import io.crate.protocols.http.HttpBlobHandler;
-import org.apache.logging.log4j.Logger;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.cluster.node.DiscoveryNode;
@@ -38,18 +36,9 @@ import org.elasticsearch.cluster.routing.ShardRouting;
 import org.elasticsearch.cluster.service.ClusterService;
 import org.elasticsearch.common.component.AbstractLifecycleComponent;
 import org.elasticsearch.common.inject.Inject;
-import org.elasticsearch.common.lease.Releasable;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.index.shard.IndexShard;
 import org.elasticsearch.indices.recovery.PeerRecoverySourceService;
-import org.elasticsearch.indices.recovery.RecoverySourceHandler;
-import org.elasticsearch.indices.recovery.RecoverySourceHandlerProvider;
-import org.elasticsearch.indices.recovery.RemoteRecoveryTargetHandler;
-import org.elasticsearch.indices.recovery.StartRecoveryRequest;
 import org.elasticsearch.transport.TransportService;
-
-import java.util.function.Function;
-import java.util.function.Supplier;
 
 public class BlobService extends AbstractLifecycleComponent {
 
@@ -96,6 +85,8 @@ public class BlobService extends AbstractLifecycleComponent {
         );
 
         blobHeadRequestHandler.registerHandler();
+        // TODO:
+        /*
         peerRecoverySourceService.registerRecoverySourceHandlerProvider(new RecoverySourceHandlerProvider() {
             @Override
             public RecoverySourceHandler get(IndexShard shard,
@@ -122,6 +113,7 @@ public class BlobService extends AbstractLifecycleComponent {
                 );
             }
         });
+        */
     }
 
     @Override

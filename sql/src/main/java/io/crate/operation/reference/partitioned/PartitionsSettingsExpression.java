@@ -147,13 +147,6 @@ public class PartitionsSettingsExpression extends RowCollectNestedObjectExpressi
         public static final String NAME = "recovery";
 
         public PartitionsSettingsRecoveryExpression() {
-            addChildImplementations();
-        }
-
-        public static final String INITIAL_SHARDS = "initial_shards";
-
-        private void addChildImplementations() {
-            childImplementations.put(INITIAL_SHARDS, new PartitionTableParameterExpression(TableParameterInfo.RECOVERY_INITIAL_SHARDS));
         }
     }
 

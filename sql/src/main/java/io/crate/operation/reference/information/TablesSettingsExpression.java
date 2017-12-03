@@ -151,13 +151,6 @@ public class TablesSettingsExpression extends AbstractTablesSettingsExpression {
         public static final String NAME = "recovery";
 
         public TablesSettingsRecoveryExpression() {
-            addChildImplementations();
-        }
-
-        public static final String INITIAL_SHARDS = "initial_shards";
-
-        private void addChildImplementations() {
-            childImplementations.put(INITIAL_SHARDS, new BytesRefTableParameterExpression(TableParameterInfo.RECOVERY_INITIAL_SHARDS));
         }
     }
 

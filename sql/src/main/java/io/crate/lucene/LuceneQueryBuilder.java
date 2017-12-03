@@ -98,9 +98,6 @@ import org.apache.lucene.search.ConstantScoreQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.RegexpQuery;
 import org.apache.lucene.search.TermRangeQuery;
-import org.apache.lucene.spatial.geopoint.document.GeoPointField;
-import org.apache.lucene.spatial.geopoint.search.GeoPointInPolygonQuery;
-import org.apache.lucene.spatial.geopoint.search.XGeoPointDistanceRangeQuery;
 import org.apache.lucene.spatial.prefix.PrefixTreeStrategy;
 import org.apache.lucene.spatial.query.SpatialArgs;
 import org.apache.lucene.spatial.query.SpatialOperation;
@@ -109,8 +106,6 @@ import org.apache.lucene.util.automaton.RegExp;
 import org.elasticsearch.ExceptionsHelper;
 import org.elasticsearch.Version;
 import org.elasticsearch.common.collect.Tuple;
-import org.elasticsearch.common.geo.GeoPoint;
-import org.elasticsearch.common.geo.GeoUtils;
 import org.elasticsearch.common.geo.ShapeRelation;
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.inject.Singleton;
@@ -120,21 +115,16 @@ import org.elasticsearch.common.lucene.search.Queries;
 import org.elasticsearch.index.cache.IndexCache;
 import org.elasticsearch.index.fielddata.IndexFieldDataService;
 import org.elasticsearch.index.fielddata.IndexGeoPointFieldData;
-import org.elasticsearch.index.mapper.BaseGeoPointFieldMapper;
 import org.elasticsearch.index.mapper.GeoPointFieldMapper;
 import org.elasticsearch.index.mapper.GeoShapeFieldMapper;
-import org.elasticsearch.index.mapper.LatLonPointFieldMapper;
 import org.elasticsearch.index.mapper.MappedFieldType;
 import org.elasticsearch.index.mapper.MapperService;
 import org.elasticsearch.index.mapper.Uid;
 import org.elasticsearch.index.query.ExistsQueryBuilder;
 import org.elasticsearch.index.query.QueryShardContext;
 import org.elasticsearch.index.query.RegexpFlag;
-import org.elasticsearch.index.search.geo.GeoPolygonQuery;
-import org.elasticsearch.index.search.geo.LegacyInMemoryGeoBoundingBoxQuery;
 import org.locationtech.spatial4j.context.jts.JtsSpatialContext;
 import org.locationtech.spatial4j.exception.InvalidShapeException;
-import org.locationtech.spatial4j.shape.Rectangle;
 import org.locationtech.spatial4j.shape.Shape;
 import org.locationtech.spatial4j.shape.ShapeCollection;
 
@@ -155,7 +145,6 @@ import java.util.stream.Stream;
 
 import static io.crate.lucene.DistanceQueries.esV5DistanceQuery;
 import static io.crate.operation.scalar.regex.RegexMatcher.isPcrePattern;
-import static org.elasticsearch.common.geo.GeoUtils.TOLERANCE;
 
 @Singleton
 public class LuceneQueryBuilder {
@@ -1078,7 +1067,7 @@ public class LuceneQueryBuilder {
 
                 IndexGeoPointFieldData fieldData = context.fieldDataService.getForField(geoPointFieldType);
                 if (geometry.isRectangle()) {
-                    return getBoundingBoxQuery(shape, fieldData);
+                    throw new UnsupportedOperationException("TODO");
                 } else {
                     final Version indexVersionCreated = context.queryShardContext.indexVersionCreated();
                     return getPolygonQuery(geometry, fieldData, indexVersionCreated, geoPointFieldType);
@@ -1088,20 +1077,12 @@ public class LuceneQueryBuilder {
             private static Query getPolygonQuery(Geometry geometry,
                                                  IndexGeoPointFieldData fieldData,
                                                  Version indexVersionCreated,
-                                                 BaseGeoPointFieldMapper.GeoPointFieldType fieldType) {
+                                                 GeoPointFieldMapper.GeoPointFieldType fieldType) {
                 Coordinate[] coordinates = geometry.getCoordinates();
                 // close the polygon shape if startpoint != endpoint
                 if (!CoordinateArrays.isRing(coordinates)) {
                     coordinates = Arrays.copyOf(coordinates, coordinates.length + 1);
                     coordinates[coordinates.length - 1] = coordinates[0];
-                }
-
-                if (indexVersionCreated.before(Version.V_2_2_0)) {
-                    GeoPoint[] points = new GeoPoint[coordinates.length];
-                    for (int i = 0; i < coordinates.length; i++) {
-                        points[i] = new GeoPoint(coordinates[i].y, coordinates[i].x);
-                    }
-                    return new GeoPolygonQuery(fieldData, points);
                 }
 
                 final double[] lats = new double[coordinates.length];
@@ -1111,28 +1092,7 @@ public class LuceneQueryBuilder {
                     lons[i] = coordinates[i].x;
                 }
 
-                if (indexVersionCreated.onOrAfter(LatLonPointFieldMapper.LAT_LON_FIELD_VERSION)) {
-                    return LatLonPoint.newPolygonQuery(fieldType.name(), new Polygon(lats, lons));
-                }
-
-                // if index created V_2_2 use (soon to be legacy) numeric encoding postings format
-                // if index created V_2_3 > use prefix encoded postings format
-                final GeoPointField.TermEncoding encoding = indexVersionCreated.before(Version.V_2_3_0) ?
-                    GeoPointField.TermEncoding.NUMERIC : GeoPointField.TermEncoding.PREFIX;
-                return new GeoPointInPolygonQuery(
-                    fieldData.getFieldName(),
-                    encoding,
-                    new Polygon(lats, lons)
-                );
-            }
-
-            private Query getBoundingBoxQuery(Shape shape, IndexGeoPointFieldData fieldData) {
-                Rectangle boundingBox = shape.getBoundingBox();
-                return new LegacyInMemoryGeoBoundingBoxQuery(
-                    new GeoPoint(boundingBox.getMaxY(), boundingBox.getMinX()),
-                    new GeoPoint(boundingBox.getMinY(), boundingBox.getMaxX()),
-                    fieldData
-                );
+                return LatLonPoint.newPolygonQuery(fieldType.name(), new Polygon(lats, lons));
             }
 
             @Override
@@ -1167,76 +1127,15 @@ public class LuceneQueryBuilder {
                 }
                 Double distance = DataTypes.DOUBLE.value(functionLiteralPair.input().value());
 
-
-                Version indexVersionCreated = context.indexCache.getIndexSettings().getIndexVersionCreated();
-
                 String parentName = functionLiteralPair.functionName();
                 Input geoPointInput = distanceRefLiteral.input();
                 String fieldName = distanceRefLiteral.reference().ident().columnIdent().fqn();
                 Double[] pointValue = (Double[]) geoPointInput.value();
-                if (indexVersionCreated.onOrAfter(LatLonPointFieldMapper.LAT_LON_FIELD_VERSION)) {
-                    return esV5DistanceQuery(parent, context, parentName, fieldName, distance, pointValue);
-                }
-
-                double lat = pointValue[1];
-                double lon = pointValue[0];
-
-                GeoPoint geoPoint = new GeoPoint(lat, lon);
-                Double from = null;
-                Double to = null;
-                boolean includeLower = false;
-                boolean includeUpper = false;
-
-                switch (parentName) {
-                    case EqOperator.NAME:
-                        includeLower = true;
-                        includeUpper = true;
-                        from = distance;
-                        to = distance;
-                        break;
-                    case LteOperator.NAME:
-                        includeUpper = true;
-                        includeLower = true; // ignored by old query if from == null
-                        to = distance;
-                        break;
-                    case LtOperator.NAME:
-                        to = distance;
-                        includeLower = true; // ignored by old query if from == null
-                        break;
-                    case GteOperator.NAME:
-                        from = distance;
-                        includeLower = true;
-                        includeUpper = true; // ignored by old query if to == null
-                        break;
-                    case GtOperator.NAME:
-                        from = distance;
-                        includeUpper = true; // ignored by old query if to == null
-                        break;
-                    default:
-                        // invalid operator? give up
-                        return null;
-                }
-                GeoUtils.normalizePoint(geoPoint);
-                if (from == null) {
-                    from = 0d;
-                }
-                if (to == null) {
-                    to = GeoUtils.maxRadialDistanceMeters(geoPoint.lat(), geoPoint.lon());
-                }
-                BaseGeoPointFieldMapper.GeoPointFieldType geoPointFieldType = getGeoPointFieldType(
-                    fieldName, context.mapperService);
-                IndexGeoPointFieldData fieldData = context.fieldDataService.getForField(geoPointFieldType);
-                return new XGeoPointDistanceRangeQuery(
-                    fieldData.index().getName(),
-                    GeoPointField.TermEncoding.PREFIX,
-                    geoPoint.lat(),
-                    geoPoint.lon(),
-                    (includeLower) ? from : from + TOLERANCE,
-                    (includeUpper) ? to : to - TOLERANCE);
+                return esV5DistanceQuery(parent, context, parentName, fieldName, distance, pointValue);
             }
         }
 
-        private static BaseGeoPointFieldMapper.GeoPointFieldType getGeoPointFieldType(String fieldName, MapperService mapperService) {
+        private static GeoPointFieldMapper.GeoPointFieldType getGeoPointFieldType(String fieldName, MapperService mapperService) {
             MappedFieldType fieldType = mapperService.fullName(fieldName);
             if (fieldType == null) {
                 throw new IllegalArgumentException(String.format(Locale.ENGLISH, "column \"%s\" doesn't exist", fieldName));

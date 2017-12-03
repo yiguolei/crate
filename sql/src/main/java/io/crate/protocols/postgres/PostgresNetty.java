@@ -49,7 +49,6 @@ import org.elasticsearch.common.network.NetworkService;
 import org.elasticsearch.common.settings.Setting;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.BoundTransportAddress;
-import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.common.transport.PortsRange;
 import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.http.BindHttpException;
@@ -90,7 +89,7 @@ public class PostgresNetty extends AbstractLifecycleComponent {
     private ServerBootstrap bootstrap;
 
     private final List<Channel> serverChannels = new ArrayList<>();
-    private final List<InetSocketTransportAddress> boundAddresses = new ArrayList<>();
+    private final List<TransportAddress> boundAddresses = new ArrayList<>();
     @Nullable
     private BoundTransportAddress boundAddress;
 
@@ -155,8 +154,8 @@ public class PostgresNetty extends AbstractLifecycleComponent {
         }
     }
 
-    static int resolvePublishPort(List<InetSocketTransportAddress> boundAddresses, InetAddress publishInetAddress) {
-        for (InetSocketTransportAddress boundAddress : boundAddresses) {
+    static int resolvePublishPort(List<TransportAddress> boundAddresses, InetAddress publishInetAddress) {
+        for (TransportAddress boundAddress : boundAddresses) {
             InetAddress boundInetAddress = boundAddress.address().getAddress();
             if (boundInetAddress.isAnyLocalAddress() || boundInetAddress.equals(publishInetAddress)) {
                 return boundAddress.getPort();
@@ -165,7 +164,7 @@ public class PostgresNetty extends AbstractLifecycleComponent {
 
         // if no matching boundAddress found, check if there is a unique port for all bound addresses
         final IntSet ports = new IntHashSet();
-        for (InetSocketTransportAddress boundAddress : boundAddresses) {
+        for (TransportAddress boundAddress : boundAddresses) {
             ports.add(boundAddress.getPort());
         }
         if (ports.size() == 1) {
@@ -197,10 +196,10 @@ public class PostgresNetty extends AbstractLifecycleComponent {
         }
         final int publishPort = resolvePublishPort(boundAddresses, publishInetAddress);
         final InetSocketAddress publishAddress = new InetSocketAddress(publishInetAddress, publishPort);
-        return new BoundTransportAddress(boundAddresses.toArray(new TransportAddress[boundAddresses.size()]), new InetSocketTransportAddress(publishAddress));
+        return new BoundTransportAddress(boundAddresses.toArray(new TransportAddress[boundAddresses.size()]), new TransportAddress(publishAddress));
     }
 
-    private InetSocketTransportAddress bindAddress(final InetAddress hostAddress) {
+    private TransportAddress bindAddress(final InetAddress hostAddress) {
         PortsRange portsRange = new PortsRange(port);
         final AtomicReference<Exception> lastException = new AtomicReference<>();
         final AtomicReference<InetSocketAddress> boundSocket = new AtomicReference<>();
@@ -222,7 +221,7 @@ public class PostgresNetty extends AbstractLifecycleComponent {
         if (logger.isDebugEnabled()) {
             logger.debug("Bound psql to address {{}}", NetworkAddress.format(boundSocket.get()));
         }
-        return new InetSocketTransportAddress(boundSocket.get());
+        return new TransportAddress(boundSocket.get());
     }
 
     @Override
@@ -244,7 +243,7 @@ public class PostgresNetty extends AbstractLifecycleComponent {
     }
 
     @VisibleForTesting
-    public Collection<InetSocketTransportAddress> boundAddresses() {
+    public Collection<TransportAddress> boundAddresses() {
         return Collections.unmodifiableCollection(boundAddresses);
     }
 }

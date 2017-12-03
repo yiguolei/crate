@@ -66,4 +66,9 @@ public class PutChunkRequest extends BlobTransferRequest<PutChunkRequest> implem
         out.write(digest);
         out.writeVLong(currentPos);
     }
+
+    @Override
+    public String toString() {
+        return "PutChunkRequest";
+    }
 }

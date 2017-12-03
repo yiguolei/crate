@@ -68,6 +68,11 @@ public class PutChunkReplicaRequest extends ReplicationRequest<PutChunkReplicaRe
         out.writeBoolean(isLast);
     }
 
+    @Override
+    public String toString() {
+        return "PutChunkReplicaRequest";
+    }
+
     public BytesReference content() {
         return content;
     }

@@ -22,22 +22,16 @@
 
 package io.crate.operation.reference.sys.node;
 
-import org.elasticsearch.common.transport.InetSocketTransportAddress;
-import org.elasticsearch.common.transport.LocalTransportAddress;
 import org.elasticsearch.common.transport.TransportAddress;
 
 import javax.annotation.Nullable;
 
 public class Ports {
 
-    @Nullable
-    public static Integer portFromAddress(@Nullable TransportAddress address) {
-        Integer port = null;
-        if (address instanceof InetSocketTransportAddress) {
-            port = ((InetSocketTransportAddress) address).address().getPort();
-        } else if (address instanceof LocalTransportAddress) {
-            port = -1;
+    public static int portFromAddress(@Nullable TransportAddress address) {
+        if (address == null) {
+            return -1;
         }
-        return port;
+        return address.address().getPort();
     }
 }

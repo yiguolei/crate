@@ -23,14 +23,13 @@
 package io.crate.metadata;
 
 import io.crate.exceptions.UnavailableShardsException;
-import org.elasticsearch.Version;
 import org.elasticsearch.cluster.ClusterState;
 import org.elasticsearch.cluster.metadata.IndexMetaData;
 import org.elasticsearch.cluster.node.DiscoveryNode;
 import org.elasticsearch.cluster.node.DiscoveryNodes;
-import org.elasticsearch.cluster.routing.HashFunction;
 import org.elasticsearch.cluster.routing.IndexRoutingTable;
 import org.elasticsearch.cluster.routing.IndexShardRoutingTable;
+import org.elasticsearch.cluster.routing.Murmur3HashFunction;
 import org.elasticsearch.cluster.routing.ShardIterator;
 import org.elasticsearch.cluster.routing.ShardRouting;
 import org.elasticsearch.common.SuppressForbidden;
@@ -218,15 +217,7 @@ public final class RoutingProvider {
 
     @SuppressForbidden(reason = "Math#abs is trappy")
     private static int calculateScaledShardId(IndexMetaData indexMetaData, String effectiveRouting, int partitionOffset) {
-        final HashFunction hashFunction = indexMetaData.routingHashFunction();
-        final int hash = hashFunction.hashRouting(effectiveRouting) + partitionOffset;
-
-        // we don't use IMD#getNumberOfShards since the index might have been shrunk such that we need to use the size
-        // of original index to hash documents
-        if (indexMetaData.getCreationVersion().onOrAfter(Version.V_2_0_0_beta1)) {
-            return Math.floorMod(hash, indexMetaData.getRoutingNumShards()) / indexMetaData.getRoutingFactor();
-        } else {
-            return Math.abs(hash % indexMetaData.getRoutingNumShards()) / indexMetaData.getRoutingFactor();
-        }
+        final int hash = Murmur3HashFunction.hash(effectiveRouting) + partitionOffset;
+        return Math.floorMod(hash, indexMetaData.getRoutingNumShards()) / indexMetaData.getRoutingFactor();
     }
 }
