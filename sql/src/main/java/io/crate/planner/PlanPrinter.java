@@ -33,6 +33,7 @@ import io.crate.planner.node.dql.AbstractProjectionsPhase;
 import io.crate.planner.node.dql.Collect;
 import io.crate.planner.node.dql.CollectPhase;
 import io.crate.planner.node.dql.CountPhase;
+import io.crate.planner.node.dql.CountPlan;
 import io.crate.planner.node.dql.MergePhase;
 import io.crate.planner.node.dql.QueryThenFetch;
 import io.crate.planner.node.dql.RoutedCollectPhase;
@@ -138,7 +139,13 @@ public class PlanPrinter {
 
         @Override
         public ImmutableMap.Builder<String, Object> visitCountPhase(CountPhase phase, Void context) {
-            return upstreamPhase(phase, visitExecutionPhase(phase, context));
+            ImmutableMap.Builder<String, Object> builder = visitExecutionPhase(phase, context);
+            builder.put("routing", phase.routing().locations());
+            WhereClause whereClause = phase.whereClause();
+            if (whereClause.hasQuery()) {
+                builder.put("where", whereClause.query().representation());
+            }
+            return builder;
         }
 
         @Override
@@ -225,6 +232,13 @@ public class PlanPrinter {
                 .put("left", toMap(unionExecutionPlan.left()))
                 .put("right", toMap(unionExecutionPlan.right()))
                 .put("mergePhase", phaseMap(unionExecutionPlan.mergePhase()));
+        }
+
+        @Override
+        public ImmutableMap.Builder<String, Object> visitCountPlan(CountPlan countPlan, Void context) {
+            return visitPlan(countPlan, context)
+                .put("countPhase", phaseMap(countPlan.countPhase()))
+                .put("mergePhase", phaseMap(countPlan.mergePhase()));
         }
     }
 }

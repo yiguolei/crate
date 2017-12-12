@@ -143,6 +143,8 @@ Changes
 Fixes
 =====
 
+- Fixed ``EXPLAIN`` output for simple ``SELECT COUNT(*)`` queries.
+
 - Fixed an issue that caused incorrect results for collapsable subselects which
   contained a ``WHERE`` clause that results in no match. E.g. ::
 
