@@ -139,7 +139,7 @@ public class PlanPrinter {
 
         @Override
         public ImmutableMap.Builder<String, Object> visitCountPhase(CountPhase phase, Void context) {
-            ImmutableMap.Builder<String, Object> builder = visitExecutionPhase(phase, context);
+            ImmutableMap.Builder<String, Object> builder = upstreamPhase(phase, visitExecutionPhase(phase, context));
             builder.put("routing", phase.routing().locations());
             WhereClause whereClause = phase.whereClause();
             if (whereClause.hasQuery()) {
