@@ -26,6 +26,7 @@ import io.crate.operation.user.User;
 import io.crate.operation.user.UserManager;
 import io.crate.operation.user.UserManagerService;
 import io.crate.testing.SQLResponse;
+import io.crate.testing.udf.DummyLang;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,7 +40,7 @@ public class PrivilegesIntegrationTest extends BaseUsersIntegrationTest {
 
     private static final String TEST_USERNAME = "privileges_test_user";
 
-    private final UserDefinedFunctionsIntegrationTest.DummyLang dummyLang = new UserDefinedFunctionsIntegrationTest.DummyLang();
+    private final DummyLang dummyLang = new DummyLang();
     private SQLOperations sqlOperations;
     private UserManager userManager;
 

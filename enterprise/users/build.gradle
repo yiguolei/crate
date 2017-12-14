@@ -8,8 +8,8 @@ dependencies {
     compile project(':sql')
     testCompile project(':integration-testing')
     testCompile project(':enterprise:ssl-impl')
-    testCompile project(path: ':sql', configuration: 'testOutput')
     testCompile project(':dex-testing')
+    testCompile project(':sql-testing')
     testCompile "org.hamcrest:hamcrest-all:${versions.hamcrest}"
     testCompile("io.crate:crate-jdbc:${versions.crate_jdbc}") {
         exclude group: 'net.java.dev.jna', module: 'jna'

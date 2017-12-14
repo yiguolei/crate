@@ -33,6 +33,7 @@ import io.crate.analyze.CreateTableStatementAnalyzer;
 import io.crate.analyze.NumberOfShards;
 import io.crate.analyze.ParamTypeHints;
 import io.crate.analyze.ParameterContext;
+import io.crate.analyze.TableDefinitions;
 import io.crate.analyze.expressions.ExpressionAnalysisContext;
 import io.crate.analyze.expressions.ExpressionAnalyzer;
 import io.crate.analyze.expressions.SubqueryAnalyzer;
@@ -105,6 +106,7 @@ import org.elasticsearch.env.Environment;
 import org.elasticsearch.index.analysis.AnalysisRegistry;
 import org.elasticsearch.test.ClusterServiceUtils;
 import org.elasticsearch.test.gateway.TestGatewayAllocator;
+import org.mockito.Mockito;
 
 import java.io.File;
 import java.io.IOException;
@@ -114,25 +116,11 @@ import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 
-import static io.crate.analyze.TableDefinitions.DEEPLY_NESTED_TABLE_INFO;
-import static io.crate.analyze.TableDefinitions.NESTED_PK_TABLE_INFO;
-import static io.crate.analyze.TableDefinitions.TEST_CLUSTER_BY_STRING_TABLE_INFO;
-import static io.crate.analyze.TableDefinitions.TEST_DOC_LOCATIONS_TABLE_INFO;
-import static io.crate.analyze.TableDefinitions.TEST_DOC_TRANSACTIONS_TABLE_INFO;
-import static io.crate.analyze.TableDefinitions.TEST_MULTIPLE_PARTITIONED_TABLE_INFO;
-import static io.crate.analyze.TableDefinitions.TEST_NESTED_PARTITIONED_TABLE_INFO;
-import static io.crate.analyze.TableDefinitions.TEST_PARTITIONED_TABLE_INFO;
-import static io.crate.analyze.TableDefinitions.USER_TABLE_INFO;
-import static io.crate.analyze.TableDefinitions.USER_TABLE_INFO_CLUSTERED_BY_ONLY;
-import static io.crate.analyze.TableDefinitions.USER_TABLE_INFO_MULTI_PK;
-import static io.crate.analyze.TableDefinitions.USER_TABLE_INFO_REFRESH_INTERVAL_BY_ONLY;
-import static io.crate.testing.TestingHelpers.getFunctions;
 import static java.util.Collections.singletonList;
 import static org.elasticsearch.cluster.metadata.IndexMetaData.SETTING_VERSION_CREATED;
-import static org.mockito.Mockito.mock;
 
 /**
- * Lightweight alternative to {@link SQLTransportExecutor}.
+ * Lightweight alternative to {@code SQLTransportExecutor}.
  *
  * Can be used for unit-tests testss which don't require the full execution-layer/nodes to be started.
  */
@@ -150,8 +138,6 @@ public class SQLExecutor {
 
     /**
      * Shortcut for {@link #getPlannerContext(ClusterState, Random)}
-     * This can only be used if {@link com.carrotsearch.randomizedtesting.RandomizedContext} is available
-     * (e.g. TestCase using {@link com.carrotsearch.randomizedtesting.RandomizedRunner}
      */
     public PlannerContext getPlannerContext(ClusterState clusterState) {
         return getPlannerContext(clusterState, Randomness.get());
@@ -193,7 +179,7 @@ public class SQLExecutor {
             this.clusterService = clusterService;
             schemaInfoByName.put("sys", new SysSchemaInfo());
             schemaInfoByName.put("information_schema", new InformationSchemaInfo());
-            functions = getFunctions();
+            functions = TestingHelpers.getFunctions();
 
             testingDocTableInfoFactory = new TestingDocTableInfoFactory(
                 docTables, functions, new IndexNameExpressionResolver(Settings.EMPTY));
@@ -265,18 +251,18 @@ public class SQLExecutor {
          */
         public Builder enableDefaultTables() {
             // we should try to reduce the number of tables here eventually...
-            addDocTable(USER_TABLE_INFO);
-            addDocTable(USER_TABLE_INFO_CLUSTERED_BY_ONLY);
-            addDocTable(USER_TABLE_INFO_MULTI_PK);
-            addDocTable(DEEPLY_NESTED_TABLE_INFO);
-            addDocTable(NESTED_PK_TABLE_INFO);
-            addDocTable(TEST_PARTITIONED_TABLE_INFO);
-            addDocTable(TEST_NESTED_PARTITIONED_TABLE_INFO);
-            addDocTable(TEST_MULTIPLE_PARTITIONED_TABLE_INFO);
-            addDocTable(TEST_DOC_TRANSACTIONS_TABLE_INFO);
-            addDocTable(TEST_DOC_LOCATIONS_TABLE_INFO);
-            addDocTable(TEST_CLUSTER_BY_STRING_TABLE_INFO);
-            addDocTable(USER_TABLE_INFO_REFRESH_INTERVAL_BY_ONLY);
+            addDocTable(TableDefinitions.USER_TABLE_INFO);
+            addDocTable(TableDefinitions.USER_TABLE_INFO_CLUSTERED_BY_ONLY);
+            addDocTable(TableDefinitions.USER_TABLE_INFO_MULTI_PK);
+            addDocTable(TableDefinitions.DEEPLY_NESTED_TABLE_INFO);
+            addDocTable(TableDefinitions.NESTED_PK_TABLE_INFO);
+            addDocTable(TableDefinitions.TEST_PARTITIONED_TABLE_INFO);
+            addDocTable(TableDefinitions.TEST_NESTED_PARTITIONED_TABLE_INFO);
+            addDocTable(TableDefinitions.TEST_MULTIPLE_PARTITIONED_TABLE_INFO);
+            addDocTable(TableDefinitions.TEST_DOC_TRANSACTIONS_TABLE_INFO);
+            addDocTable(TableDefinitions.TEST_DOC_LOCATIONS_TABLE_INFO);
+            addDocTable(TableDefinitions.TEST_CLUSTER_BY_STRING_TABLE_INFO);
+            addDocTable(TableDefinitions.USER_TABLE_INFO_REFRESH_INTERVAL_BY_ONLY);
             addDocTable(T3.T1_INFO);
             addDocTable(T3.T2_INFO);
             addDocTable(T3.T3_INFO);
@@ -306,8 +292,8 @@ public class SQLExecutor {
                     analysisRegistry,
                     new RepositoryService(
                         clusterService,
-                        mock(TransportDeleteRepositoryAction.class),
-                        mock(TransportPutRepositoryAction.class)
+                        Mockito.mock(TransportDeleteRepositoryAction.class),
+                        Mockito.mock(TransportPutRepositoryAction.class)
                     ),
                     new ModulesBuilder().add(new RepositorySettingsModule())
                         .createInjector()

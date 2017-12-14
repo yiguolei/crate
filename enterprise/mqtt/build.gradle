@@ -18,8 +18,8 @@ dependencies {
     testCompile project(':integration-testing')
     testCompile project(':enterprise:ssl-impl')
     testCompile('org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.0')
-    testCompile project(path: ':sql', configuration: 'testOutput')
     testCompile project(':dex-testing')
+    testCompile project(':sql-testing')
     testCompile("io.crate:crate-jdbc:${versions.crate_jdbc}") {
         exclude group: 'net.java.dev.jna', module: 'jna'
         exclude group: 'commons-logging', module: 'commons-logging'

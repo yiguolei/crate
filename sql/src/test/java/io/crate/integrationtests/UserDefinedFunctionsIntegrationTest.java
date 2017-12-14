@@ -27,23 +27,15 @@
 package io.crate.integrationtests;
 
 import com.google.common.collect.ImmutableList;
-import io.crate.data.Input;
-import io.crate.metadata.FunctionIdent;
-import io.crate.metadata.FunctionInfo;
-import io.crate.metadata.Scalar;
-import io.crate.operation.udf.UDFLanguage;
-import io.crate.operation.udf.UserDefinedFunctionMetaData;
 import io.crate.operation.udf.UserDefinedFunctionService;
 import io.crate.testing.UseJdbc;
+import io.crate.testing.udf.DummyLang;
 import io.crate.types.DataType;
 import io.crate.types.DataTypes;
-import org.apache.lucene.util.BytesRef;
-import org.elasticsearch.common.lucene.BytesRefs;
 import org.elasticsearch.test.ESIntegTestCase;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.script.ScriptException;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
@@ -58,47 +50,6 @@ import static org.hamcrest.CoreMatchers.is;
 @ESIntegTestCase.ClusterScope(numDataNodes = 2, numClientNodes = 0, randomDynamicTemplates = false)
 @UseJdbc(0) // create/drop function has no rowcount
 public class UserDefinedFunctionsIntegrationTest extends SQLTransportIntegrationTest {
-
-    public static class DummyFunction<InputType> extends Scalar<BytesRef, InputType>  {
-
-        private final FunctionInfo info;
-        private final UserDefinedFunctionMetaData metaData;
-
-        private DummyFunction(UserDefinedFunctionMetaData metaData) {
-            this.info = new FunctionInfo(new FunctionIdent(metaData.schema(), metaData.name(), metaData.argumentTypes()), DataTypes.STRING);
-            this.metaData = metaData;
-        }
-
-        @Override
-        public FunctionInfo info() {
-            return info;
-        }
-
-        @Override
-        public BytesRef evaluate(Input<InputType>... args) {
-            // dummy-lang functions simple print the type of the only argument
-            return BytesRefs.toBytesRef("DUMMY EATS " + metaData.argumentTypes().get(0).getName());
-        }
-    }
-
-    public static class DummyLang implements UDFLanguage {
-
-        @Override
-        public Scalar createFunctionImplementation(UserDefinedFunctionMetaData metaData) throws ScriptException {
-            return new DummyFunction<>(metaData);
-        }
-
-        @Override
-        public String validate(UserDefinedFunctionMetaData metadata) {
-            // dummy language does not validate anything
-            return null;
-        }
-
-        @Override
-        public String name() {
-            return "dummy_lang";
-        }
-    }
 
     private final DummyLang dummyLang = new DummyLang();
 
