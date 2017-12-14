@@ -42,12 +42,6 @@ task jarTest (type: Jar) {
     classifier = 'sql-testing'
 }
 
-jmhJar {
-    append 'META-INF/services/org.apache.lucene.codecs.DocValuesFormat'
-    append 'META-INF/services/org.apache.lucene.codecs.Codec'
-    append 'META-INF/services/org.apache.lucene.codecs.PostingsFormat'
-}
-
 artifacts {
     testOutput jarTest
 }
