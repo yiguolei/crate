@@ -3,13 +3,6 @@ apply plugin: 'groovy'
 
 archivesBaseName = 'crate-sql'
 
-configurations {
-    benchmarksCompile.extendsFrom testCompile
-    benchmarksRuntime.extendsFrom testRuntime, benchmarksCompile
-    // export of test so that other modules can use the utilities there as well.
-    testOutput
-}
-
 dependencies {
     compile project(':shared')
     compile project(':core')
@@ -28,6 +21,7 @@ dependencies {
     compile "javax.xml:jaxb-api:${versions.jaxb_api}"
 
     testCompile project(':integration-testing')
+    testCompile project(':sql-testing')
     testCompile project(path: ':dex', configuration: 'testOutput')
     testCompile 'org.skyscreamer:jsonassert:1.3.0'
     testCompile "org.hamcrest:hamcrest-all:${versions.hamcrest}"
@@ -37,15 +31,6 @@ dependencies {
         exclude group: 'commons-logging', module: 'commons-logging'
         exclude group: 'org.slf4j', module: 'jcl-over-slf4j'
     }
-}
-//noinspection GroovyAssignabilityCheck
-task jarTest (type: Jar) {
-    from sourceSets.test.output
-    classifier = 'sql-testing'
-}
-
-artifacts {
-    testOutput jarTest
 }
 
 test {

@@ -22,7 +22,7 @@ jar.dependsOn('writePropertiesFile')
 dependencies {
     compile project(':sql')
     testCompile project(':integration-testing')
-    testCompile project(path: ':sql', configuration: 'testOutput')
+    testCompile project(':sql-testing')
     testCompile project(path: ':dex', configuration: 'testOutput')
     testCompile 'org.skyscreamer:jsonassert:1.3.0'
     testCompile "org.hamcrest:hamcrest-all:${versions.hamcrest}"

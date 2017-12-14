@@ -8,7 +8,7 @@ dependencies {
     compile project(':sql')
     testCompile project(':integration-testing')
     testCompile project(':enterprise:ssl-impl')
-    testCompile project(path: ':sql', configuration: 'testOutput')
+    testCompile project(':sql-testing')
     testCompile project(path: ':dex', configuration: 'testOutput')
     testCompile "org.hamcrest:hamcrest-all:${versions.hamcrest}"
     testCompile("io.crate:crate-jdbc:${versions.crate_jdbc}") {

@@ -7,7 +7,7 @@ description = 'HyperLogLog for CrateDB'
 dependencies {
     compile project(':sql')
 
-    testCompile project(path: ':sql', configuration: 'testOutput')
+    testCompile project(':sql-testing')
     testCompile project(':integration-testing')
     testCompile "org.hamcrest:hamcrest-all:${versions.hamcrest}"
 }

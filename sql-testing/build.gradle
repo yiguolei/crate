@@ -1,0 +1,8 @@
+apply from: "$rootDir/gradle/javaModule.gradle"
+
+archivesBaseName = 'crate-sql-testing'
+
+
+dependencies {
+    compile project(':sql')
+}
