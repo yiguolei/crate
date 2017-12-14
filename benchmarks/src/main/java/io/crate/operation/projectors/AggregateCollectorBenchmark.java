@@ -27,12 +27,15 @@ import io.crate.breaker.RamAccountingContext;
 import io.crate.data.Input;
 import io.crate.data.Row;
 import io.crate.data.Row1;
+import io.crate.metadata.Functions;
 import io.crate.operation.aggregation.AggregationFunction;
+import io.crate.operation.aggregation.impl.AggregationImplModule;
 import io.crate.operation.aggregation.impl.SumAggregation;
 import io.crate.operation.collect.InputCollectExpression;
 import io.crate.types.DataTypes;
 import org.elasticsearch.Version;
 import org.elasticsearch.common.breaker.NoopCircuitBreaker;
+import org.elasticsearch.common.inject.ModulesBuilder;
 import org.elasticsearch.common.util.BigArrays;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -50,8 +53,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static io.crate.testing.TestingHelpers.getFunctions;
-
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
 @State(Scope.Benchmark)
@@ -65,8 +66,12 @@ public class AggregateCollectorBenchmark {
 
     @Setup
     public void setup() {
+        Functions functions = new ModulesBuilder()
+            .add(new AggregationImplModule())
+            .add().createInjector().getInstance(Functions.class);
+
         InputCollectExpression inExpr0 = new InputCollectExpression(0);
-        SumAggregation sumAggregation = ((SumAggregation) getFunctions().getBuiltin(
+        SumAggregation sumAggregation = ((SumAggregation) functions.getBuiltin(
             SumAggregation.NAME, Collections.singletonList(DataTypes.INTEGER)));
         collector = new AggregateCollector(
             Collections.singletonList(inExpr0),
