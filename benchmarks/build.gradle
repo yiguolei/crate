@@ -7,7 +7,7 @@ apply plugin: 'application'
 archivesBaseName = 'crate-benchmarks'
 mainClassName = 'org.openjdk.jmh.Main'
 
-test.enabled = false
+// test.enabled = false
 
 dependencies {
     compile project(':sql')

@@ -37,13 +37,14 @@ dependencies {
     }
 }
 //noinspection GroovyAssignabilityCheck
-task jarTest (type: Jar) {
-    from sourceSets.test.output
+task testOutputJar (type: Jar) {
     classifier = 'sql-testing'
+    from sourceSets.test.output
+    group 'build'
 }
 
 artifacts {
-    testOutput jarTest
+    testOutput testOutputJar
 }
 
 test {
