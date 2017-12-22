@@ -26,6 +26,7 @@ import io.crate.data.BatchIterator;
 import io.crate.data.BatchIterators;
 import io.crate.data.Row;
 import io.crate.exceptions.Exceptions;
+import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 
 import java.util.List;
@@ -38,11 +39,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static io.crate.concurrent.CompletableFutures.failedFuture;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.fail;
 
 /**
  * A class which can be used to verify that a {@link io.crate.data.BatchIterator} implements
@@ -91,7 +87,7 @@ public class BatchIteratorTester {
 
     private void testMoveNextAfterMoveNextReturnedFalse(BatchIterator<Row> it) throws Exception {
         TestingRowConsumer.moveToEnd(it).toCompletableFuture().get(10, TimeUnit.SECONDS);
-        assertThat(it.moveNext(), is(false));
+        MatcherAssert.assertThat(it.moveNext(), Matchers.is(false));
         it.close();
     }
 
@@ -100,7 +96,7 @@ public class BatchIteratorTester {
             it.loadNextBatch().toCompletableFuture().get(10, TimeUnit.SECONDS);
         }
         CompletionStage<?> completionStage = it.loadNextBatch();
-        assertThat(completionStage.toCompletableFuture().isCompletedExceptionally(), is(true));
+        MatcherAssert.assertThat(completionStage.toCompletableFuture().isCompletedExceptionally(), Matchers.is(true));
         it.close();
     }
 
@@ -113,17 +109,17 @@ public class BatchIteratorTester {
         try {
             CompletableFuture<Object[]> firstRow = CompletableFuture.supplyAsync(() -> {
                 Row firstElement = getFirstElement(it);
-                assertThat("it should have at least two rows, first missing", firstElement, Matchers.notNullValue());
+                MatcherAssert.assertThat("it should have at least two rows, first missing", firstElement, Matchers.notNullValue());
                 return firstElement.materialize();
             }, executor);
             CompletableFuture<Object[]> secondRow = firstRow.thenApplyAsync(row -> {
                 Row firstElement = getFirstElement(it);
-                assertThat("it should have at least two rows", firstElement, Matchers.notNullValue());
+                MatcherAssert.assertThat("it should have at least two rows", firstElement, Matchers.notNullValue());
                 return firstElement.materialize();
             }, executor);
 
-            assertThat(firstRow.get(10, TimeUnit.SECONDS), is(expectedResult.get(0)));
-            assertThat(secondRow.get(10, TimeUnit.SECONDS), is(expectedResult.get(1)));
+            MatcherAssert.assertThat(firstRow.get(10, TimeUnit.SECONDS), Matchers.is(expectedResult.get(0)));
+            MatcherAssert.assertThat(secondRow.get(10, TimeUnit.SECONDS), Matchers.is(expectedResult.get(1)));
         } finally {
             executor.shutdownNow();
             executor.awaitTermination(5, TimeUnit.SECONDS);
@@ -155,7 +151,7 @@ public class BatchIteratorTester {
 
     private void testBehaviourAfterClose(BatchIterator<Row> it) {
         it.close();
-        assertThat("currentElement is not affected by close", it.currentElement(), is(it.currentElement()));
+        MatcherAssert.assertThat("currentElement is not affected by close", it.currentElement(), Matchers.is(it.currentElement()));
 
         expectFailure(it::moveNext, IllegalStateException.class, "moveNext must fail after close");
         expectFailure(it::moveToStart, IllegalStateException.class, "moveToStart must fail after close");
@@ -171,9 +167,9 @@ public class BatchIteratorTester {
 
     private static void checkResult(List<Object[]> expected, List<Object[]> actual) {
         if (expected.isEmpty()) {
-            assertThat(actual, empty());
+            MatcherAssert.assertThat(actual, Matchers.empty());
         } else {
-            assertThat(actual, Matchers.contains(expected.toArray(new Object[0])));
+            MatcherAssert.assertThat(actual, Matchers.contains(expected.toArray(new Object[0])));
         }
     }
 
@@ -182,9 +178,9 @@ public class BatchIteratorTester {
                                       String reason) {
         try {
             runnable.run();
-            fail(reason);
+            throw new AssertionError(reason);
         } catch (Exception e) {
-            assertThat(e, instanceOf(expectedException));
+            MatcherAssert.assertThat(e, Matchers.instanceOf(expectedException));
         }
     }
 }
