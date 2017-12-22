@@ -1,14 +1,19 @@
-apply from: "$rootDir/gradle/javaModule.gradle"
+apply plugin: 'java-library'
 
 archivesBaseName = 'crate-sql-testing'
 
+repositories {
+    mavenCentral()
+    jcenter()
+    maven { url "https://jitpack.io" }
+}
 
 dependencies {
-    compile project(':sql')
-    compile project(':integration-testing')
-    compile project(':dex-testing')
-    compile "org.hamcrest:hamcrest-all:${versions.hamcrest}"
-    compile("io.crate:crate-jdbc:${versions.crate_jdbc}") {
+    implementation project(':sql')
+    api project(':integration-testing')
+    implementation project(':dex-testing')
+    implementation "org.hamcrest:hamcrest-all:${versions.hamcrest}"
+    implementation("io.crate:crate-jdbc:${versions.crate_jdbc}") {
         exclude group: 'net.java.dev.jna', module: 'jna'
         exclude group: 'commons-logging', module: 'commons-logging'
         exclude group: 'org.slf4j', module: 'jcl-over-slf4j'

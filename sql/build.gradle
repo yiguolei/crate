@@ -1,7 +1,14 @@
-apply from: "$rootDir/gradle/javaModule.gradle"
+// apply from: "$rootDir/gradle/javaModule.gradle"
+apply plugin: 'java-library'
 apply plugin: 'groovy'
 
 archivesBaseName = 'crate-sql'
+
+repositories {
+    mavenCentral()
+    jcenter()
+    maven { url "https://jitpack.io" }
+}
 
 dependencies {
     compile project(':shared')
@@ -32,11 +39,11 @@ dependencies {
     }
 }
 
-jmhJar {
-    append 'META-INF/services/org.apache.lucene.codecs.DocValuesFormat'
-    append 'META-INF/services/org.apache.lucene.codecs.Codec'
-    append 'META-INF/services/org.apache.lucene.codecs.PostingsFormat'
-}
+//jmhJar {
+//    append 'META-INF/services/org.apache.lucene.codecs.DocValuesFormat'
+//    append 'META-INF/services/org.apache.lucene.codecs.Codec'
+//    append 'META-INF/services/org.apache.lucene.codecs.PostingsFormat'
+//}
 
 
 test {
@@ -47,6 +54,28 @@ test {
 
     // make sure sources are first on classpath because we do override some class(es) (currently: lucene's AssertingLeafReader)
     classpath = sourceSets.main.output + sourceSets.test.output + configurations.testCompile
+
+    // by default `-D` arguments are "caught" in the gradle process
+    // and not passed-through to the test process.
+    // this enables test options like '-Dtests.iters=20'
+
+    System.properties.each { k, v ->
+        if (k.startsWith('tests.')) {
+            systemProperty k, v
+        }
+    }
+
+    // ES testing framework adds the resources target build paths to the classpath of the tests,
+    // but if the src/[main|test]/resources directories of a project are empty, then these dirs
+    // are missing from the target build directory which causes all tests to fail.
+    // The groovy target build paths have the same problem.
+    // To prevent this case we always create the target build resource and groovy directories upfront.
+    doFirst {
+        file(project.buildDir.path + '/resources/main').mkdirs()
+        file(project.buildDir.path + '/resources/test').mkdirs()
+        file(project.buildDir.path + '/classes/groovy/main').mkdirs()
+        file(project.buildDir.path + '/classes/groovy/test').mkdirs()
+    }
 }
 
 clean.dependsOn('cleanTest')
