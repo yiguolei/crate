@@ -60,10 +60,9 @@ public class CrateSettingsPreparer {
         newSettings.put(input);
         newSettings.putProperties(cmdLineSettings, Function.identity());
         newSettings.replacePropertyPlaceholders();
-        Environment env = new Environment(newSettings.build(), configPath);
 
         newSettings = Settings.builder();
-        Path path = env.configFile().resolve("crate.yml");
+        Path path = configPath.resolve("crate.yml");
         if (Files.exists(path)) {
             try {
                 newSettings.loadFromPath(path);
@@ -80,7 +79,7 @@ public class CrateSettingsPreparer {
         validateKnownSettings(newSettings);
         applyCrateDefaults(newSettings);
 
-        env = new Environment(newSettings.build(), configPath);
+        Environment env = new Environment(newSettings.build(), configPath);
 
         // we put back the path.logs so we can use it in the logging configuration file
         newSettings.put(
