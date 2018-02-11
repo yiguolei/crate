@@ -288,7 +288,7 @@ public class CopyIntegrationTest extends SQLHttpIntegrationTest {
             writer.write("{|}");
         }
         expectedException.expect(SQLActionException.class);
-        expectedException.expectMessage("Failed to parse JSON in line: 1 in file:");
+        expectedException.expectMessage("Failed to parse input in line: 1 in file:");
         execute("copy foo from ?", new Object[]{Paths.get(newFile.toURI()).toUri().toString()});
     }
 
