@@ -23,21 +23,20 @@ package io.crate.expression.reference.doc.lucene;
 
 import io.crate.exceptions.GroupByOnArrayUnsupportedException;
 import io.crate.exceptions.ValidationException;
+import org.apache.lucene.index.DocValues;
 import org.apache.lucene.index.LeafReaderContext;
+import org.apache.lucene.index.SortedSetDocValues;
 import org.apache.lucene.util.BytesRef;
-import org.elasticsearch.index.fielddata.IndexOrdinalsFieldData;
-import org.elasticsearch.index.fielddata.SortedBinaryDocValues;
-import org.elasticsearch.index.mapper.MappedFieldType;
 
 import java.io.IOException;
 
-public class BytesRefColumnReference extends FieldCacheExpression<IndexOrdinalsFieldData, BytesRef> {
+public class BytesRefColumnReference extends LuceneCollectorExpression<BytesRef> {
 
-    private SortedBinaryDocValues values;
+    private SortedSetDocValues values;
     private BytesRef value;
 
-    public BytesRefColumnReference(String columnName, MappedFieldType mappedFieldType) {
-        super(columnName, mappedFieldType);
+    public BytesRefColumnReference(String columnName) {
+        super(columnName);
     }
 
     @Override
@@ -49,11 +48,11 @@ public class BytesRefColumnReference extends FieldCacheExpression<IndexOrdinalsF
     public void setNextDocId(int docId) throws IOException {
         super.setNextDocId(docId);
         if (values.advanceExact(docId)) {
-            if (values.docValueCount() == 1) {
-                value = BytesRef.deepCopyOf(values.nextValue());
-            } else {
+            long ord = values.nextOrd();
+            if (values.nextOrd() != SortedSetDocValues.NO_MORE_ORDS) {
                 throw new GroupByOnArrayUnsupportedException(columnName);
             }
+            value =  BytesRef.deepCopyOf(values.lookupOrd(ord));
         } else {
             value = null;
         }
@@ -62,10 +61,10 @@ public class BytesRefColumnReference extends FieldCacheExpression<IndexOrdinalsF
     @Override
     public void setNextReader(LeafReaderContext context) throws IOException {
         super.setNextReader(context);
-        // String columns created via CREATE TABLE use docValues so we could use
-        //  `FieldData.maybeSlowRandomAccessOrds(DocValues.getSortedSet(reader, field));` for those.
-        // But dynamic columns don't use docValues so we need to use the fieldData abstraction layer.
-        values = indexFieldData.load(context).getBytesValues();
+        values = context.reader().getSortedSetDocValues(columnName);
+        if (values == null) {
+            values = DocValues.emptySortedSet();
+        }
     }
 
     @Override

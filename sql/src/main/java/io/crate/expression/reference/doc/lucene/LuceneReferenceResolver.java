@@ -129,7 +129,7 @@ public class LuceneReferenceResolver implements ReferenceResolver<LuceneCollecto
             case IpType.ID:
                 return new IpColumnReference(fqn);
             case StringType.ID:
-                return new BytesRefColumnReference(fqn, fieldType);
+                return new BytesRefColumnReference(fqn);
             case DoubleType.ID:
                 return new DoubleColumnReference(fqn, fieldType);
             case BooleanType.ID:
