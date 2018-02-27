@@ -23,7 +23,6 @@
 package io.crate.execution.dml;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Throwables;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
@@ -104,7 +103,7 @@ public abstract class TransportShardAction<Request extends ShardRequest<Request,
                     return processRequestItems(indexShard, shardRequest, killed);
                 }
         };
-        return wrapOperationInKillable(shardRequest, callable);
+        return wrapOperationInKillable(shardRequest.jobId(), callable);
     }
 
 
@@ -117,22 +116,20 @@ public abstract class TransportShardAction<Request extends ShardRequest<Request,
                     return processRequestItemsOnReplica(indexShard, replicaRequest);
                 }
         };
-        return wrapOperationInKillable(replicaRequest, callable);
+        return wrapOperationInKillable(replicaRequest.jobId(), callable);
     }
 
-    private <WrapperResponse> WrapperResponse wrapOperationInKillable(Request request, KillableCallable<WrapperResponse> callable) {
-        activeOperations.put(request.jobId(), callable);
-        WrapperResponse response;
+    private <WrapperResponse> WrapperResponse wrapOperationInKillable(UUID jobId, KillableCallable<WrapperResponse> callable) {
+        activeOperations.put(jobId, callable);
         try {
-            //noinspection unchecked
-            response = callable.call();
+            return callable.call();
+        } catch (RuntimeException e) {
+            throw e;
         } catch (Throwable e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         } finally {
-            activeOperations.remove(request.jobId(), callable);
+            activeOperations.remove(jobId, callable);
         }
-        return response;
-
     }
 
     @Override
