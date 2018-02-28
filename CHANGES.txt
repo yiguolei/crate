@@ -46,13 +46,15 @@ Breaking Changes
   removed. Nodes will recover their unassigned local primary shards
   immediatelly after restart.
 
-- The `_node` column on `sys.shards` and `sys.operations` has been renamed to
-  `node`, is now visible by default and has been trimmed to only include
-  `node['id']` and `node['name']`. In order to get all information a join query
-  can be used with `sys.nodes`.
+- The ``_node`` column on ``sys.shards`` and ``sys.operations`` has been renamed to
+  ``node``, is now visible by default and has been trimmed to only include
+  ``node['id']`` and ``node['name']``. In order to get all information a join query
+  can be used with ``sys.nodes``.
 
 Changes
 =======
+
+- Added a ``node`` column to ``sys.jobs``
 
 - Added new `sys.health` system information table to expose the health of all
   tables and table partitions.

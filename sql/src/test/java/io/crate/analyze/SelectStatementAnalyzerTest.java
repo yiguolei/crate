@@ -82,7 +82,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import static com.carrotsearch.randomizedtesting.RandomizedTest.$;
 import static io.crate.analyze.TableDefinitions.SHARD_ROUTING;
 import static io.crate.testing.SymbolMatchers.isField;
 import static io.crate.testing.SymbolMatchers.isFunction;
@@ -1742,9 +1741,10 @@ public class SelectStatementAnalyzerTest extends CrateDummyClusterServiceUnitTes
     public void testFullQualifiedStarPrefix() throws Exception {
         QueriedRelation relation = analyze("select sys.jobs.* from sys.jobs");
         List<Symbol> outputs = relation.querySpec().outputs();
-        assertThat(outputs.size(), is(4));
+        assertThat(outputs.size(), is(5));
         //noinspection unchecked
-        assertThat(outputs, Matchers.contains(isReference("id"), isReference("started"), isReference("stmt"), isReference("username")));
+        assertThat(outputs, Matchers.contains(
+            isReference("id"), isReference("node"), isReference("started"), isReference("stmt"), isReference("username")));
     }
 
     @Test
@@ -1758,9 +1758,10 @@ public class SelectStatementAnalyzerTest extends CrateDummyClusterServiceUnitTes
     public void testSelectStarWithTableAliasAsPrefix() throws Exception {
         QueriedRelation relation = analyze("select t1.* from sys.jobs t1");
         List<Symbol> outputs = relation.querySpec().outputs();
-        assertThat(outputs.size(), is(4));
+        assertThat(outputs.size(), is(5));
         //noinspection unchecked
-        assertThat(outputs, Matchers.contains(isReference("id"), isReference("started"), isReference("stmt"), isReference("username")));
+        assertThat(outputs, Matchers.contains(
+            isReference("id"), isReference("node"), isReference("started"), isReference("stmt"), isReference("username")));
     }
 
     @Test

@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import io.crate.action.sql.SessionContext;
 import io.crate.analyze.WhereClause;
+import io.crate.expression.reference.sys.job.JobContext;
 import io.crate.metadata.ColumnIdent;
 import io.crate.metadata.Routing;
 import io.crate.metadata.RoutingProvider;
@@ -34,9 +35,13 @@ import io.crate.metadata.TableIdent;
 import io.crate.metadata.expressions.RowCollectExpressionFactory;
 import io.crate.metadata.table.ColumnRegistrar;
 import io.crate.metadata.table.StaticTableInfo;
-import io.crate.expression.reference.sys.job.JobContext;
 import io.crate.types.DataTypes;
+import org.apache.lucene.util.BytesRef;
 import org.elasticsearch.cluster.ClusterState;
+import org.elasticsearch.cluster.node.DiscoveryNode;
+
+import java.util.Map;
+import java.util.function.Supplier;
 
 public class SysJobsTableInfo extends StaticTableInfo {
 
@@ -48,9 +53,12 @@ public class SysJobsTableInfo extends StaticTableInfo {
         static final ColumnIdent USERNAME = new ColumnIdent("username");
         static final ColumnIdent STMT = new ColumnIdent("stmt");
         public static final ColumnIdent STARTED = new ColumnIdent("started");
+        private static final ColumnIdent NODE = new ColumnIdent("node");
+        private static final ColumnIdent NODE_ID = new ColumnIdent("node", "id");
+        private static final ColumnIdent NODE_NAME = new ColumnIdent("node", "name");
     }
 
-    public static ImmutableMap<ColumnIdent, RowCollectExpressionFactory<JobContext>> expressions() {
+    public static Map<ColumnIdent, RowCollectExpressionFactory<JobContext>> expressions(Supplier<DiscoveryNode> localNode) {
         return ImmutableMap.<ColumnIdent, RowCollectExpressionFactory<JobContext>>builder()
             .put(SysJobsTableInfo.Columns.ID,
                 () -> RowContextCollectorExpression.objToBytesRef(JobContext::id))
@@ -60,6 +68,14 @@ public class SysJobsTableInfo extends StaticTableInfo {
                 () -> RowContextCollectorExpression.objToBytesRef(JobContext::stmt))
             .put(SysJobsTableInfo.Columns.STARTED,
                 () -> RowContextCollectorExpression.forFunction(JobContext::started))
+            .put(Columns.NODE, () -> RowContextCollectorExpression.forFunction(ignored -> ImmutableMap.of(
+                "id", new BytesRef(localNode.get().getId()),
+                "name", new BytesRef(localNode.get().getName())
+            )))
+            .put(Columns.NODE_ID,
+                () -> RowContextCollectorExpression.forFunction(ignored -> new BytesRef(localNode.get().getId())))
+            .put(Columns.NODE_NAME,
+                () -> RowContextCollectorExpression.forFunction(ignored -> new BytesRef(localNode.get().getName())))
             .build();
     }
 
@@ -68,7 +84,10 @@ public class SysJobsTableInfo extends StaticTableInfo {
             .register(Columns.ID, DataTypes.STRING)
             .register(Columns.USERNAME, DataTypes.STRING)
             .register(Columns.STMT, DataTypes.STRING)
-            .register(Columns.STARTED, DataTypes.TIMESTAMP), PRIMARY_KEY);
+            .register(Columns.STARTED, DataTypes.TIMESTAMP)
+            .register(Columns.NODE, DataTypes.OBJECT)
+            .register(Columns.NODE_ID, DataTypes.STRING)
+            .register(Columns.NODE_NAME, DataTypes.STRING), PRIMARY_KEY);
     }
 
     @Override

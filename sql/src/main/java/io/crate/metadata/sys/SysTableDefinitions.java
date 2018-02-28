@@ -34,6 +34,7 @@ import io.crate.expression.reference.sys.shard.SysAllocations;
 import io.crate.expression.reference.sys.snapshot.SysSnapshot;
 import io.crate.expression.reference.sys.snapshot.SysSnapshots;
 import io.crate.metadata.TableIdent;
+import org.elasticsearch.cluster.node.DiscoveryNode;
 import org.elasticsearch.cluster.service.ClusterService;
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.repositories.RepositoriesService;
@@ -59,9 +60,10 @@ public class SysTableDefinitions {
                                SysSnapshots sysSnapshots,
                                SysAllocations sysAllocations,
                                TableHealthService tableHealthService) {
+        Supplier<DiscoveryNode> localNode = clusterService::localNode;
         tableDefinitions.put(SysJobsTableInfo.IDENT, new StaticTableDefinition<>(
             () -> completedFuture(jobsLogs.activeJobs()),
-            SysJobsTableInfo.expressions()
+            SysJobsTableInfo.expressions(localNode)
         ));
         tableDefinitions.put(SysJobsLogTableInfo.IDENT, new StaticTableDefinition<>(
             () -> completedFuture(jobsLogs.jobsLog()),
@@ -69,7 +71,7 @@ public class SysTableDefinitions {
         ));
         tableDefinitions.put(SysOperationsTableInfo.IDENT, new StaticTableDefinition<>(
             () -> completedFuture(jobsLogs.activeOperations()),
-            SysOperationsTableInfo.expressions(clusterService::localNode)
+            SysOperationsTableInfo.expressions(localNode)
         ));
         tableDefinitions.put(SysOperationsLogTableInfo.IDENT, new StaticTableDefinition<>(
             () -> completedFuture(jobsLogs.operationsLog()),

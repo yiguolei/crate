@@ -37,7 +37,7 @@ public class SysJobsTest extends SQLTransportIntegrationTest {
 
     @Test
     public void testQueryAllColumns() throws Exception {
-        String stmt = "select * from sys.jobs";
+        String stmt = "select id, stmt from sys.jobs";
 
         // the response contains all current jobs, if the tests are executed in parallel
         // this might be more then only the "select * from sys.jobs" statement.
@@ -46,7 +46,7 @@ public class SysJobsTest extends SQLTransportIntegrationTest {
 
         for (Object[] objects : response.rows()) {
             assertNotNull(objects[0]);
-            statements.add((String) objects[2]);
+            statements.add((String) objects[1]);
         }
         assertTrue(statements.contains(stmt));
     }
