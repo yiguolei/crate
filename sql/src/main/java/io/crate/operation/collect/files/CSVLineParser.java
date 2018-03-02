@@ -62,7 +62,7 @@ public class CSVLineParser {
 
         try {
             final Set<String> keys = headerParser.getHeaderMap().keySet();
-            return convertCSVToJsonString(keys, rowParser);
+            return convertCSVToJsonByteArray(keys, rowParser);
         } finally {
             headerInputStream.close();
             rowInputStream.close();
@@ -73,8 +73,8 @@ public class CSVLineParser {
         }
     }
 
-    private static byte[] convertCSVToJsonString(Set<String> keys, CSVParser rowParser) throws JsonProcessingException {
-        Map<String,String> mapForSingleRow = Collections.emptyMap();
+    private static byte[] convertCSVToJsonByteArray(Set<String> keys, CSVParser rowParser) throws JsonProcessingException {
+        Map<String,String> convertedCsvToMap = Collections.emptyMap();
 
         List<String> keyList = getListOfKeys(keys);
 
@@ -82,9 +82,9 @@ public class CSVLineParser {
             if (rowEntries.size() != keyList.size()) {
                 throw new IllegalArgumentException("Number of row entries is not equal to the number of columns");
             }
-            mapForSingleRow = getMapOfKeysAndRowEntries(keyList, rowEntries);
+            convertedCsvToMap = generateMap(keyList, rowEntries);
         }
-        return new ObjectMapper().writeValueAsBytes(mapForSingleRow);
+        return new ObjectMapper().writeValueAsBytes(convertedCsvToMap);
     }
 
     private static List<String> getListOfKeys(Set<String> keys) {
@@ -92,7 +92,7 @@ public class CSVLineParser {
         return new ArrayList<>(keys);
     }
 
-    private static Map<String, String> getMapOfKeysAndRowEntries(List<String> keys, CSVRecord rowEntries) {
+    private static Map<String, String> generateMap(List<String> keys, CSVRecord rowEntries) {
         return IntStream.range(0, keys.size())
             .boxed()
             .collect(Collectors.toMap(keys::get, rowEntries::get));

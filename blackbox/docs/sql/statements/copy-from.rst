@@ -288,7 +288,7 @@ primary key already exists. Set to true to overwrite duplicate rows.
 ''''''''''''''''''''''''
 This option specifies the format of the input and can be set as
 ``csv`` or ``json``. If this is not provided, and the file does not have
-a csv extension, then the file will be processed as json.
+a relevant extension, then the file will be processed as json.
 
 .. _`AWS documentation`: http://docs.aws.amazon.com/AmazonS3/latest/dev/RESTAuthentication.html
 .. _`AWS Java Documentation`: http://docs.aws.amazon.com/AmazonS3/latest/dev/AuthUsingAcctOrUserCredJava.html
