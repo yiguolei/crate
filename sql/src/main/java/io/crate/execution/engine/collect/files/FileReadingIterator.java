@@ -171,7 +171,6 @@ public class FileReadingIterator implements BatchIterator<Row> {
                     closeCurrentReader();
                     return moveNext();
                 }
-                System.out.println("This line" + line);
                 lineProcessor.process(line, inputFormat, currentUri);
                 return true;
             } else if (currentInputIterator != null && currentInputIterator.hasNext()) {

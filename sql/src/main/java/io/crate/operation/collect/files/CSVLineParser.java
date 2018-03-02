@@ -82,10 +82,8 @@ public class CSVLineParser {
             if (rowEntries.size() != keyList.size()) {
                 throw new IllegalArgumentException("Number of row entries is not equal to the number of columns");
             }
-
             mapForSingleRow = getMapOfKeysAndRowEntries(keyList, rowEntries);
         }
-
         return new ObjectMapper().writeValueAsBytes(mapForSingleRow);
     }
 

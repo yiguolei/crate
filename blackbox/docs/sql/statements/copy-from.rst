@@ -103,7 +103,6 @@ Is converted to:
 
     'file:///tmp%20folder/file.json'
 
-
 Supported Schemes
 -----------------
 

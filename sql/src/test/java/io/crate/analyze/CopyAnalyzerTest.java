@@ -122,6 +122,7 @@ public class CopyAnalyzerTest extends CrateDummyClusterServiceUnitTest {
         CopyFromAnalyzedStatement analysis = e.analyze("copy users from '/some/distant/file.ext' with (format='json')");
         assertThat(analysis.table().ident(), is(USER_TABLE_IDENT));
         assertThat(analysis.inputFormat(), is(FileUriCollectPhase.InputFormat.JSON));
+        assertThat(analysis.uri(), isLiteral("/some/distant/file.ext"));
     }
 
     @Test
@@ -129,6 +130,7 @@ public class CopyAnalyzerTest extends CrateDummyClusterServiceUnitTest {
         CopyFromAnalyzedStatement analysis = e.analyze("copy users from '/some/distant/file.ext' with (format='csv')");
         assertThat(analysis.table().ident(), is(USER_TABLE_IDENT));
         assertThat(analysis.inputFormat(), is(FileUriCollectPhase.InputFormat.CSV));
+        assertThat(analysis.uri(), isLiteral("/some/distant/file.ext"));
     }
 
     @Test

@@ -72,7 +72,6 @@ public class FileUriCollectPhase extends AbstractProjectionsPhase implements Col
         CSV
     }
 
-
     public Symbol targetUri() {
         return targetUri;
     }
@@ -133,7 +132,6 @@ public class FileUriCollectPhase extends AbstractProjectionsPhase implements Col
         }
         Symbols.toStream(toCollect, out);
         out.writeVInt(inputFormat.ordinal());
-
     }
 
     @Override

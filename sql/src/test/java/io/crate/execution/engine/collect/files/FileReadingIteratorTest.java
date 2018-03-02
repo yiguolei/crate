@@ -127,8 +127,6 @@ public class FileReadingIteratorTest extends CrateUnitTest {
         tester.verifyResultAndEdgeCaseBehaviour(expectedResult);
     }
 
-    // If has one input format but another ext/Inputformat param
-
     @Test
     public void testIteratorContract_givenNoInputFormat_givenCSVExtension_thenParsesAsJson() throws Exception {
         givenTempFileWithSuffix(".csv");

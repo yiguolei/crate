@@ -133,7 +133,6 @@ class CopyAnalyzer {
             Map<String, Expression> properties = new HashMap<>(node.genericProperties().properties());
             nodeFilters = discoveryNodePredicate(analysis.parameterContext().parameters(), properties.remove(NodeFilters.NAME));
             settings = settingsFromProperties(properties, expressionAnalyzer, expressionAnalysisContext);
-
         }
         Symbol uri = expressionAnalyzer.convert(node.path(), expressionAnalysisContext);
         uri = normalizer.normalize(uri, analysis.transactionContext());
