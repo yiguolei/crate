@@ -285,7 +285,7 @@ Default: false
 primary key already exists. Set to true to overwrite duplicate rows.
 
 ``format``
-''''''''''''''''''''''''
+''''''''''
 This option specifies the format of the input and can be set as
 ``csv`` or ``json``. If this is not provided, and the file does not have
 a relevant extension, then the file will be processed as json.
