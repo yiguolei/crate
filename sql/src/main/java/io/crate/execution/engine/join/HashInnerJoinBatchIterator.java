@@ -93,7 +93,7 @@ public class HashInnerJoinBatchIterator<L extends Row, R extends Row, C> extends
     private final long estimatedRowSizeForLeft;
     private final long numberOfRowsForLeft;
 
-    private IntObjectHashMap<List<Object[]>> buffer;
+    private IntObjectHashMap<Object> buffer;
     private int blockSize;
     private int numberOfRowsInBuffer = 0;
     private boolean leftBatchHasItems = false;
@@ -214,13 +214,8 @@ public class HashInnerJoinBatchIterator<L extends Row, R extends Row, C> extends
         leftMatchingRowsIterator = null;
         while (right.moveNext()) {
             int rightHash = hashBuilderForRight.apply(right.currentElement());
-            List<Object[]> leftMatchingRows = buffer.get(rightHash);
-            if (leftMatchingRows != null) {
-                leftMatchingRowsIterator = leftMatchingRows.iterator();
-                combiner.setRight(right.currentElement());
-                if (findMatchingRows()) {
-                    return true;
-                }
+            if (tryMatchWithLeft(rightHash)) {
+                return true;
             }
         }
 
@@ -228,13 +223,41 @@ public class HashInnerJoinBatchIterator<L extends Row, R extends Row, C> extends
         return false;
     }
 
-    private void addToBuffer(Object[] currentRow, int hash) {
-        List<Object[]> existingRows = buffer.get(hash);
-        if (existingRows == null) {
-            existingRows = new ArrayList<>();
-            buffer.put(hash, existingRows);
+    private boolean tryMatchWithLeft(int rightHash) {
+        Object leftMatchingRows = buffer.get(rightHash);
+        if (leftMatchingRows != null) {
+            combiner.setRight(right.currentElement());
+
+            if (leftMatchingRows.getClass().isArray()) {
+                leftRow.cells((Object[]) leftMatchingRows);
+                combiner.setLeft((L) leftRow);
+                if (joinCondition.test(combiner.currentElement())) {
+                    return true;
+                }
+            } else {
+                leftMatchingRowsIterator = ((List<Object[]>) leftMatchingRows).iterator();
+                combiner.setRight(right.currentElement());
+                if (findMatchingRows()) {
+                    return true;
+                }
+            }
         }
-        existingRows.add(currentRow);
+        return false;
+    }
+
+    @SuppressWarnings("unchecked")
+    private void addToBuffer(Object[] currentRow, int hash) {
+        Object existingRows = buffer.get(hash);
+        if (existingRows == null) {
+            buffer.put(hash, currentRow);
+        } else if (existingRows.getClass().isArray()) {
+            List<Object[]> chain = new ArrayList<>();
+            chain.add((Object[]) existingRows);
+            chain.add(currentRow);
+            buffer.put(hash, chain);
+        } else {
+            ((List<Object[]>) (existingRows)).add(currentRow);
+        }
         numberOfRowsInBuffer++;
     }
 
