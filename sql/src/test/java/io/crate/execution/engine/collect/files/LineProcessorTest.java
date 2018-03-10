@@ -80,7 +80,6 @@ public class LineProcessorTest {
 
         whenCalledWith("anyString", inputFormat, uri);
 
-        then
     }
 
     @Test
