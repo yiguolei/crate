@@ -47,6 +47,8 @@ public class RetryOnFailureResultReceiver implements ResultReceiver {
 
     private static final Logger LOGGER = Loggers.getLogger(RetryOnFailureResultReceiver.class);
 
+    private static final TimeValue TIMEOUT = TimeValue.timeValueMillis(200);
+
     private final ClusterService clusterService;
     private final ClusterState initialState;
     private final ThreadContext threadContext;
@@ -96,8 +98,9 @@ public class RetryOnFailureResultReceiver implements ResultReceiver {
             if (clusterService.state().blocks().hasGlobalBlock(RestStatus.SERVICE_UNAVAILABLE)) {
                 delegate.fail(error);
             } else {
+                LOGGER.error("RETRY");
                 ClusterStateObserver clusterStateObserver =
-                    new ClusterStateObserver(initialState, clusterService, null, LOGGER, threadContext);
+                    new ClusterStateObserver(initialState, clusterService, TIMEOUT, LOGGER, threadContext);
                 clusterStateObserver.waitForNextChange(new ClusterStateObserver.Listener() {
                     @Override
                     public void onNewClusterState(ClusterState state) {
