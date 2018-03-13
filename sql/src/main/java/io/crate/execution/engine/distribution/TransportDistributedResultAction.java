@@ -24,14 +24,16 @@ package io.crate.execution.engine.distribution;
 
 import io.crate.concurrent.CompletableFutures;
 import io.crate.exceptions.ContextMissingException;
-import io.crate.execution.support.NodeAction;
-import io.crate.execution.support.NodeActionRequestHandler;
-import io.crate.execution.support.Transports;
 import io.crate.execution.jobs.DownstreamExecutionSubContext;
 import io.crate.execution.jobs.JobContextService;
 import io.crate.execution.jobs.JobExecutionContext;
 import io.crate.execution.jobs.PageBucketReceiver;
 import io.crate.execution.jobs.PageResultListener;
+import io.crate.execution.jobs.kill.KillJobsRequest;
+import io.crate.execution.jobs.kill.TransportKillJobsNodeAction;
+import io.crate.execution.support.NodeAction;
+import io.crate.execution.support.NodeActionRequestHandler;
+import io.crate.execution.support.Transports;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.ActionListenerResponseHandler;
 import org.elasticsearch.common.component.AbstractComponent;
@@ -41,6 +43,7 @@ import org.elasticsearch.common.util.concurrent.EsRejectedExecutionException;
 import org.elasticsearch.threadpool.ThreadPool;
 import org.elasticsearch.transport.TransportService;
 
+import java.util.Collections;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -57,6 +60,7 @@ public class TransportDistributedResultAction extends AbstractComponent implemen
     private final Transports transports;
     private final JobContextService jobContextService;
     private final ScheduledExecutorService scheduler;
+    private final TransportKillJobsNodeAction killJobAction;
     private final Executor executor;
 
     @Inject
@@ -64,12 +68,14 @@ public class TransportDistributedResultAction extends AbstractComponent implemen
                                             JobContextService jobContextService,
                                             ThreadPool threadPool,
                                             TransportService transportService,
+                                            TransportKillJobsNodeAction killJobAction,
                                             Settings settings) {
         super(settings);
         this.transports = transports;
         this.jobContextService = jobContextService;
         this.executor = threadPool.executor(EXECUTOR_NAME);
         scheduler = threadPool.scheduler();
+        this.killJobAction = killJobAction;
 
         transportService.registerRequestHandler(DISTRIBUTED_RESULT_ACTION,
             DistributedResultRequest::new,
@@ -138,7 +144,18 @@ public class TransportDistributedResultAction extends AbstractComponent implemen
     private CompletableFuture<DistributedResultResponse> retryOrFailureResponse(DistributedResultRequest request,
                                                                                 int retry) {
 
-        if (retry > 20) {
+        if (true) {
+            killJobAction.broadcast(new KillJobsRequest(Collections.singletonList(request.jobId())), new ActionListener<Long>() {
+                @Override
+                public void onResponse(Long aLong) {
+
+                }
+
+                @Override
+                public void onFailure(Exception e) {
+
+                }
+            });
             return CompletableFutures.failedFuture(
                 new ContextMissingException(ContextMissingException.ContextType.JOB_EXECUTION_CONTEXT, request.jobId()));
         } else {
