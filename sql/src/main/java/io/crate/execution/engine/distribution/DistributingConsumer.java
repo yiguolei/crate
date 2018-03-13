@@ -29,6 +29,8 @@ import io.crate.data.Bucket;
 import io.crate.data.Row;
 import io.crate.data.RowConsumer;
 import io.crate.exceptions.SQLExceptions;
+import io.crate.execution.jobs.kill.KillJobsRequest;
+import io.crate.execution.jobs.kill.TransportKillJobsNodeAction;
 import org.apache.logging.log4j.Logger;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.common.util.concurrent.EsRejectedExecutionException;
@@ -36,6 +38,7 @@ import org.elasticsearch.common.util.concurrent.EsRejectedExecutionException;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Executor;
@@ -59,6 +62,7 @@ public class DistributingConsumer implements RowConsumer {
     private final byte inputId;
     private final int bucketIdx;
     private final TransportDistributedResultAction distributedResultAction;
+    private final TransportKillJobsNodeAction killJobAction;
     private final Streamer<?>[] streamers;
     private final int pageSize;
     private final Bucket[] buckets;
@@ -79,6 +83,7 @@ public class DistributingConsumer implements RowConsumer {
                                 int bucketIdx,
                                 Collection<String> downstreamNodeIds,
                                 TransportDistributedResultAction distributedResultAction,
+                                TransportKillJobsNodeAction killJobAction,
                                 Streamer<?>[] streamers,
                                 int pageSize) {
         this.traceEnabled = logger.isTraceEnabled();
@@ -90,6 +95,7 @@ public class DistributingConsumer implements RowConsumer {
         this.inputId = inputId;
         this.bucketIdx = bucketIdx;
         this.distributedResultAction = distributedResultAction;
+        this.killJobAction = killJobAction;
         this.streamers = streamers;
         this.pageSize = pageSize;
         this.buckets = new Bucket[downstreamNodeIds.size()];
@@ -234,6 +240,19 @@ public class DistributingConsumer implements RowConsumer {
                 }
             } else {
                 it.close();
+                if (failure != null) {
+                    killJobAction.broadcast(new KillJobsRequest(Collections.singletonList(jobId)), new ActionListener<Long>() {
+                        @Override
+                        public void onResponse(Long aLong) {
+
+                        }
+
+                        @Override
+                        public void onFailure(Exception e) {
+
+                        }
+                    });
+                }
             }
         }
     }

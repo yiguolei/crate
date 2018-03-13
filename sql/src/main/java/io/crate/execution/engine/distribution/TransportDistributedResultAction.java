@@ -24,14 +24,14 @@ package io.crate.execution.engine.distribution;
 
 import io.crate.concurrent.CompletableFutures;
 import io.crate.exceptions.ContextMissingException;
-import io.crate.execution.support.NodeAction;
-import io.crate.execution.support.NodeActionRequestHandler;
-import io.crate.execution.support.Transports;
 import io.crate.execution.jobs.DownstreamExecutionSubContext;
 import io.crate.execution.jobs.JobContextService;
 import io.crate.execution.jobs.JobExecutionContext;
 import io.crate.execution.jobs.PageBucketReceiver;
 import io.crate.execution.jobs.PageResultListener;
+import io.crate.execution.support.NodeAction;
+import io.crate.execution.support.NodeActionRequestHandler;
+import io.crate.execution.support.Transports;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.ActionListenerResponseHandler;
 import org.elasticsearch.common.component.AbstractComponent;
@@ -138,7 +138,7 @@ public class TransportDistributedResultAction extends AbstractComponent implemen
     private CompletableFuture<DistributedResultResponse> retryOrFailureResponse(DistributedResultRequest request,
                                                                                 int retry) {
 
-        if (retry > 20) {
+        if (true) {
             return CompletableFutures.failedFuture(
                 new ContextMissingException(ContextMissingException.ContextType.JOB_EXECUTION_CONTEXT, request.jobId()));
         } else {

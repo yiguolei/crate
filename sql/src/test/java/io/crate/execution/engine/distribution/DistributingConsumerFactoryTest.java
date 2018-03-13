@@ -27,13 +27,14 @@ import com.google.common.collect.ImmutableSet;
 import io.crate.analyze.WhereClause;
 import io.crate.core.collections.TreeMapBuilder;
 import io.crate.data.RowConsumer;
+import io.crate.execution.dsl.phases.MergePhase;
+import io.crate.execution.dsl.phases.NodeOperation;
+import io.crate.execution.dsl.phases.RoutedCollectPhase;
+import io.crate.execution.jobs.kill.TransportKillJobsNodeAction;
+import io.crate.execution.support.Paging;
 import io.crate.metadata.Routing;
 import io.crate.metadata.RowGranularity;
-import io.crate.execution.dsl.phases.NodeOperation;
-import io.crate.execution.support.Paging;
 import io.crate.planner.distribution.DistributionInfo;
-import io.crate.execution.dsl.phases.MergePhase;
-import io.crate.execution.dsl.phases.RoutedCollectPhase;
 import io.crate.test.integration.CrateDummyClusterServiceUnitTest;
 import io.crate.types.DataType;
 import io.crate.types.LongType;
@@ -60,6 +61,7 @@ public class DistributingConsumerFactoryTest extends CrateDummyClusterServiceUni
             Settings.EMPTY,
             clusterService,
             THREAD_POOL,
+            mock(TransportKillJobsNodeAction.class),
             mock(TransportDistributedResultAction.class)
         );
     }

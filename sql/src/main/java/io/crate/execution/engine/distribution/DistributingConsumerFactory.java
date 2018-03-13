@@ -26,6 +26,7 @@ import io.crate.Streamer;
 import io.crate.data.RowConsumer;
 import io.crate.execution.dsl.phases.ExecutionPhases;
 import io.crate.execution.dsl.phases.NodeOperation;
+import io.crate.execution.jobs.kill.TransportKillJobsNodeAction;
 import io.crate.planner.distribution.DistributionInfo;
 import io.crate.planner.node.StreamerVisitor;
 import org.apache.logging.log4j.Logger;
@@ -49,6 +50,7 @@ public class DistributingConsumerFactory extends AbstractComponent {
 
     private final ClusterService clusterService;
     private final Executor responseExecutor;
+    private final TransportKillJobsNodeAction killJobsAction;
     private final TransportDistributedResultAction transportDistributedResultAction;
     private final Logger distributingDownstreamLogger;
 
@@ -56,10 +58,12 @@ public class DistributingConsumerFactory extends AbstractComponent {
     public DistributingConsumerFactory(Settings settings,
                                        ClusterService clusterService,
                                        ThreadPool threadPool,
+                                       TransportKillJobsNodeAction killJobsAction,
                                        TransportDistributedResultAction transportDistributedResultAction) {
         super(settings);
         this.clusterService = clusterService;
         this.responseExecutor = threadPool.executor(RESPONSE_EXECUTOR_NAME);
+        this.killJobsAction = killJobsAction;
         this.transportDistributedResultAction = transportDistributedResultAction;
         distributingDownstreamLogger = Loggers.getLogger(DistributingConsumer.class, settings);
     }
@@ -103,6 +107,7 @@ public class DistributingConsumerFactory extends AbstractComponent {
             bucketIdx,
             nodeOperation.downstreamNodes(),
             transportDistributedResultAction,
+            killJobsAction,
             streamers,
             pageSize
         );

@@ -27,8 +27,9 @@ import io.crate.Streamer;
 import io.crate.breaker.RamAccountingContext;
 import io.crate.data.CollectionBucket;
 import io.crate.data.Row;
-import io.crate.execution.jobs.PageDownstreamContext;
 import io.crate.execution.engine.distribution.merge.PassThroughPagingIterator;
+import io.crate.execution.jobs.PageDownstreamContext;
+import io.crate.execution.jobs.kill.TransportKillJobsNodeAction;
 import io.crate.test.integration.CrateUnitTest;
 import io.crate.testing.BatchSimulatingIterator;
 import io.crate.testing.FailingBatchIterator;
@@ -136,6 +137,7 @@ public class DistributingConsumerTest extends CrateUnitTest {
             0,
             Collections.singletonList("n1"),
             distributedResultAction,
+            mock(TransportKillJobsNodeAction.class),
             streamers,
             2 // pageSize
         );
