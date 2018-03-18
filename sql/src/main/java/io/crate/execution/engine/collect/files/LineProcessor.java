@@ -47,7 +47,7 @@ public class LineProcessor {
     public void readFirstLine(URI currentUri, InputFormat inputFormat, BufferedReader currentReader) throws IOException {
         if (isInputCsv(inputFormat, currentUri)) {
             header = currentReader.readLine();
-            CSVLineParser.parseHeader(header.getBytes(StandardCharsets.UTF_8));
+            CSVLineParser.parseHeader(header);
         }
     }
 
@@ -55,7 +55,7 @@ public class LineProcessor {
         byte[] lineAsByteArray = line.getBytes(StandardCharsets.UTF_8);
 
         if (isInputCsv(inputFormat, currentUri)) {
-            byte[] jsonByteArray = convertCsvToJsonByteArray(header, lineAsByteArray);
+            byte[] jsonByteArray = convertCsvToJsonByteArray(header, line);
             lineContext.rawSource(jsonByteArray);
         } else {
             lineContext.rawSource(lineAsByteArray);
@@ -66,7 +66,7 @@ public class LineProcessor {
         return (inputFormat == InputFormat.CSV) || currentUri.toString().endsWith(".csv");
     }
 
-    private byte[] convertCsvToJsonByteArray(String header, byte[] lineAsByteArray) throws IOException {
-        return CSVLineParser.parse(header.getBytes(StandardCharsets.UTF_8), lineAsByteArray);
+    private byte[] convertCsvToJsonByteArray(String header, String lineAsByteArray) throws IOException {
+        return CSVLineParser.parse(header, lineAsByteArray);
     }
 }
