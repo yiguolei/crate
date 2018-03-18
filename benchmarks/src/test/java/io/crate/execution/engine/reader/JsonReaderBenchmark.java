@@ -56,8 +56,35 @@ public class JsonReaderBenchmark {
         tempFile = File.createTempFile("temp", null);
         fileUri = tempFile.toURI().getPath();
         try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(tempFile), StandardCharsets.UTF_8)) {
-            writer.write("{\"name\": \"Arthur\", \"id\": 4, \"details\": {\"age\": 38}}\n");
-            writer.write("{\"id\": 5, \"name\": \"Trillian\", \"details\": {\"age\": 33}}\n");
+            writer.write("{\"name\": \"Arthur\", \"id\": 4\\n");
+            writer.write("{\"id\": 5, \"name\": \"Trillian\"\n");
+            writer.write("{\"id\": 5, \"name\": \"Emma\"\n");
+            writer.write("{\"id\": 9, \"name\": \"Emily\"\n");
+            writer.write("{\"id\": 5, \"name\": \"Sarah\"\n");
+            writer.write("{\"id\": 5, \"name\": \"John\"\n");
+            writer.write("{\"id\": 9, \"name\": \"Mical\"\n");
+            writer.write("{\"id\": 5, \"name\": \"Mary\"\n");
+            writer.write("{\"id\": 9, \"name\": \"Jimmy\"\n");
+            writer.write("{\"id\": 5, \"name\": \"Tom\"\n");
+            writer.write("{\"id\": 0, \"name\": \"Neil\"\n");
+            writer.write("{\"id\": 5, \"name\": \"Rose\"\n");
+            writer.write("{\"id\": 5, \"name\": \"Gobnait\"\n");
+            writer.write("{\"id\": 1, \"name\": \"Rory\"\n");
+            writer.write("{\"id\": 11, \"name\": \"Martin\"\n");
+            writer.write("{\"id\": 5, \"name\": \"Trillian\"\n");
+            writer.write("{\"id\": 5, \"name\": \"Emma\"\n");
+            writer.write("{\"id\": 9, \"name\": \"Emily\"\n");
+            writer.write("{\"id\": 5, \"name\": \"Sarah\"\n");
+            writer.write("{\"id\": 5, \"name\": \"John\"\n");
+            writer.write("{\"id\": 9, \"name\": \"Mical\"\n");
+            writer.write("{\"id\": 5, \"name\": \"Mary\"\n");
+            writer.write("{\"id\": 9, \"name\": \"Jimmy\"\n");
+            writer.write("{\"id\": 5, \"name\": \"Tom\"\n");
+            writer.write("{\"id\": 0, \"name\": \"Neil\"\n");
+            writer.write("{\"id\": 5, \"name\": \"Rose\"\n");
+            writer.write("{\"id\": 5, \"name\": \"Gobnait\"\n");
+            writer.write("{\"id\": 1, \"name\": \"Rory\"\n");
+            writer.write("{\"id\": 11, \"name\": \"Martin\"\n");
         }
     }
 

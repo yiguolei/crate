@@ -59,11 +59,39 @@ public class CsvReaderBenchmark {
             writer.write("name,id\n");
             writer.write("Arthur,4\n");
             writer.write("Trillian,5\n");
+            writer.write("Emma,5\n");
+            writer.write("Emily,9\n");
+            writer.write("Sarah,5\n");
+            writer.write("John,5\n");
+            writer.write("Mical,9\n");
+            writer.write("Mary,5\n");
+            writer.write("Jimmy,9\n");
+            writer.write("Tom,5\n");
+            writer.write("Neil,0\n");
+            writer.write("Rose,5\n");
+            writer.write("Gobnait,5\n");
+            writer.write("Rory,1\n");
+            writer.write("Martin,11\n");
+            writer.write("Arthur,4\n");
+            writer.write("Trillian,5\n");
+            writer.write("Emma,5\n");
+            writer.write("Emily,9\n");
+            writer.write("Sarah,5\n");
+            writer.write("John,5\n");
+            writer.write("Mical,9\n");
+            writer.write("Mary,5\n");
+            writer.write("Jimmy,9\n");
+            writer.write("Tom,5\n");
+            writer.write("Neil,0\n");
+            writer.write("Rose,5\n");
+            writer.write("Gobnait,5\n");
+            writer.write("Rory,1\n");
+            writer.write("Martin,11\n");
         }
     }
 
     @Benchmark()
-    public void measureFileReadingIteratorForJson(Blackhole blackhole) {
+    public void measureFileReadingIteratorForCSV(Blackhole blackhole) {
         Reference raw = createReference("_raw", DataTypes.STRING);
         InputFactory.Context<LineCollectorExpression<?>> ctx = inputFactory.ctxForRefs(FileLineReferenceResolver::getImplementation);
 
