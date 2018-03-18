@@ -201,7 +201,7 @@ public class FileReadingIteratorTest extends CrateUnitTest {
     private void writeCsvToOutputStream(File tmpFile) throws IOException {
         try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(tmpFile), StandardCharsets.UTF_8)) {
             writer.write("name,id\n");
-            writer.write("Arthur,4\n");
+            writer.write("Arthur            ,4\n");
             writer.write("Trillian,5\n");
         }
     }

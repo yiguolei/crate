@@ -19,6 +19,7 @@ public class CSVLineParserTest {
         givenHeader("\n");
         givenRow("GER,Germany\n");
 
+        whenParseHeaderIsCalled();
         whenParseIsCalled();
     }
 
@@ -27,6 +28,7 @@ public class CSVLineParserTest {
         givenHeader("Code,Country,Country\n");
         givenRow("GER,Germany,Another\n");
 
+        whenParseHeaderIsCalled();
         whenParseIsCalled();
     }
 
@@ -35,6 +37,7 @@ public class CSVLineParserTest {
         givenHeader("Code,\n");
         givenRow("GER,Germany\n");
 
+        whenParseHeaderIsCalled();
         whenParseIsCalled();
     }
 
@@ -43,6 +46,7 @@ public class CSVLineParserTest {
         givenHeader("Code,Country,Another\n");
         givenRow("GER,Germany\n");
 
+        whenParseHeaderIsCalled();
         whenParseIsCalled();
     }
 
@@ -51,6 +55,7 @@ public class CSVLineParserTest {
         givenHeader("Code,Country\n");
         givenRow("GER,Germany\n");
 
+        whenParseHeaderIsCalled();
         whenParseIsCalled();
 
         assertThat(result, is("{\"Country\":\"Germany\",\"Code\":\"GER\"}".getBytes(StandardCharsets.UTF_8)));
@@ -61,6 +66,7 @@ public class CSVLineParserTest {
         givenHeader("Code,Country\n");
         givenRow("\n");
 
+        whenParseHeaderIsCalled();
         whenParseIsCalled();
 
         assertThat(result, is("{}".getBytes(StandardCharsets.UTF_8)));
@@ -71,6 +77,7 @@ public class CSVLineParserTest {
         givenHeader("Code,\"Coun, try\"\n");
         givenRow("GER,Germany\n");
 
+        whenParseHeaderIsCalled();
         whenParseIsCalled();
 
         assertThat(result, is("{\"Coun, try\":\"Germany\",\"Code\":\"GER\"}".getBytes(StandardCharsets.UTF_8)));
@@ -82,6 +89,7 @@ public class CSVLineParserTest {
         givenHeader("Code,Country,City\n");
         givenRow("GER,,Berlin\n");
 
+        whenParseHeaderIsCalled();
         whenParseIsCalled();
 
         assertThat(result, is("{\"Country\":\"\",\"City\":\"Berlin\",\"Code\":\"GER\"}".getBytes(StandardCharsets.UTF_8)));
@@ -93,6 +101,7 @@ public class CSVLineParserTest {
         givenHeader("Code ,Country  \n");
         givenRow("GER,Germany\n");
 
+        whenParseHeaderIsCalled();
         whenParseIsCalled();
 
         assertThat(result, is("{\"Country\":\"Germany\",\"Code\":\"GER\"}".getBytes(StandardCharsets.UTF_8)));
@@ -103,6 +112,7 @@ public class CSVLineParserTest {
         givenHeader("Code,Country\n");
         givenRow("GER        ,Germany\n");
 
+        whenParseHeaderIsCalled();
         whenParseIsCalled();
 
         assertThat(result, is("{\"Country\":\"Germany\",\"Code\":\"GER\"}".getBytes(StandardCharsets.UTF_8)));
@@ -113,6 +123,7 @@ public class CSVLineParserTest {
         givenHeader("         Code,         Country\n");
         givenRow("GER,Germany\n");
 
+        whenParseHeaderIsCalled();
         whenParseIsCalled();
 
         assertThat(result, is("{\"Country\":\"Germany\",\"Code\":\"GER\"}".getBytes(StandardCharsets.UTF_8)));
@@ -123,6 +134,7 @@ public class CSVLineParserTest {
         givenHeader("Code,Country\n");
         givenRow("GER,               Germany\n");
 
+        whenParseHeaderIsCalled();
         whenParseIsCalled();
 
         assertThat(result, is("{\"Country\":\"Germany\",\"Code\":\"GER\"}".getBytes(StandardCharsets.UTF_8)));
@@ -134,6 +146,10 @@ public class CSVLineParserTest {
 
     private void givenRow(String row) {
         rowByteArray = row.getBytes(StandardCharsets.UTF_8);
+    }
+
+    private void whenParseHeaderIsCalled() throws IOException {
+        CSVLineParser.parseHeader(headerByteArray);
     }
 
     private void whenParseIsCalled() throws IOException {

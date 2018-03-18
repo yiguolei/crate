@@ -25,66 +25,69 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Set;
-import java.util.List;
 import java.util.ArrayList;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Set;
 
 public class CSVLineParser {
 
+    private static Set<String> keys;
+    private static List<String> keyList;
+
+    public static void parseHeader(byte[] header) throws IOException {
+        Reader headerReader = new InputStreamReader(new ByteArrayInputStream(header), StandardCharsets.UTF_8);
+        CSVParser headerParser = new CSVParser(headerReader, CSVFormat.DEFAULT.withTrim().withFirstRecordAsHeader());
+        try {
+
+            keys = headerParser.getHeaderMap().keySet();
+            keyList = getListOfKeys(keys);
+        } finally {
+            headerReader.close();
+            headerParser.close();
+        }
+    }
+
     public static byte[] parse(byte[] header, byte[] row) throws IOException {
-
-        ByteArrayInputStream headerInputStream = new ByteArrayInputStream(header);
-        ByteArrayInputStream rowInputStream = new ByteArrayInputStream(row);
-
-        Reader headerReader = new InputStreamReader(headerInputStream, StandardCharsets.UTF_8);
-        Reader rowReader = new InputStreamReader(rowInputStream, StandardCharsets.UTF_8);
-        CSVParser headerParser = CSVFormat
-            .DEFAULT
-            .withFirstRecordAsHeader()
-            .withTrim()
-            .parse(headerReader);
+        Reader rowReader = new InputStreamReader(new ByteArrayInputStream(row), StandardCharsets.UTF_8);
 
         CSVParser rowParser = CSVFormat
-            .DEFAULT
-            .withTrim()
+            .DEFAULT.withTrim().withFirstRecordAsHeader()
             .parse(rowReader);
 
+        Set<String> records = rowParser.getHeaderMap().keySet();
+        List<String> recordList = new ArrayList<>(records);
+
         try {
-            final Set<String> keys = headerParser.getHeaderMap().keySet();
-            return convertCSVToJsonByteArray(keys, rowParser);
+            return convertCSVToJson(keyList, recordList);
         } finally {
-            headerInputStream.close();
-            rowInputStream.close();
-            headerReader.close();
             rowReader.close();
-            headerParser.close();
             rowParser.close();
         }
     }
 
-    private static byte[] convertCSVToJsonByteArray(Set<String> keys, CSVParser rowParser) throws JsonProcessingException {
-        Map<String,String> convertedCsvToMap = Collections.emptyMap();
-
-        List<String> keyList = getListOfKeys(keys);
-
-        for (CSVRecord rowEntries : rowParser) {
-            if (rowEntries.size() != keyList.size()) {
-                throw new IllegalArgumentException("Number of row entries is not equal to the number of columns");
-            }
-            convertedCsvToMap = generateMap(keyList, rowEntries);
+    private static byte[] convertCSVToJson(List<String> keyList, List<String> recordList) throws JsonProcessingException {
+        if (recordList.isEmpty()) {
+            return new ObjectMapper().writeValueAsBytes(Collections.emptyMap());
         }
-        return new ObjectMapper().writeValueAsBytes(convertedCsvToMap);
+
+        if (keyList.size() != recordList.size()) {
+            throw new IllegalArgumentException("Number of row entries is not equal to the number of columns");
+        }
+
+        HashMap<String, String> map = new HashMap<>();
+        for (int i = 0; i < keys.size(); i++) {
+            map.put(keyList.get(i), recordList.get(i));
+        }
+
+        return new ObjectMapper().writeValueAsBytes(map);
     }
 
     private static List<String> getListOfKeys(Set<String> keys) {
@@ -92,9 +95,7 @@ public class CSVLineParser {
         return new ArrayList<>(keys);
     }
 
-    private static Map<String, String> generateMap(List<String> keys, CSVRecord rowEntries) {
-        return IntStream.range(0, keys.size())
-            .boxed()
-            .collect(Collectors.toMap(keys::get, rowEntries::get));
-    }
 }
+
+
+

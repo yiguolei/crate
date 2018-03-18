@@ -33,7 +33,9 @@ import java.nio.charset.StandardCharsets;
 public class LineProcessor {
 
     private LineContext lineContext;
-    private static String header;
+    private String header;
+    private String parsedHeader;
+
 
     public void startCollect(Iterable<LineCollectorExpression<?>> collectorExpressions) {
         lineContext = new LineContext();
@@ -45,6 +47,7 @@ public class LineProcessor {
     public void readFirstLine(URI currentUri, InputFormat inputFormat, BufferedReader currentReader) throws IOException {
         if (isInputCsv(inputFormat, currentUri)) {
             header = currentReader.readLine();
+            CSVLineParser.parseHeader(header.getBytes(StandardCharsets.UTF_8));
         }
     }
 
