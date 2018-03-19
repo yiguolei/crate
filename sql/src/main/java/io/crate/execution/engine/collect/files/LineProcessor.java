@@ -32,13 +32,9 @@ import java.nio.charset.StandardCharsets;
 
 public class LineProcessor {
 
-    private LineContext lineContext;
-    private String header;
-    private String parsedHeader;
-
+    private LineContext lineContext  = new LineContext();
 
     public void startCollect(Iterable<LineCollectorExpression<?>> collectorExpressions) {
-        lineContext = new LineContext();
         for (LineCollectorExpression<?> collectorExpression : collectorExpressions) {
             collectorExpression.startCollect(lineContext);
         }
@@ -46,18 +42,17 @@ public class LineProcessor {
 
     public void readFirstLine(URI currentUri, InputFormat inputFormat, BufferedReader currentReader) throws IOException {
         if (isInputCsv(inputFormat, currentUri)) {
-            header = currentReader.readLine();
+            String header = currentReader.readLine();
             CSVLineParser.parseHeader(header);
         }
     }
 
     public void process(String line, InputFormat inputFormat, URI currentUri) throws IOException {
-        byte[] lineAsByteArray = line.getBytes(StandardCharsets.UTF_8);
-
         if (isInputCsv(inputFormat, currentUri)) {
-            byte[] jsonByteArray = convertCsvToJsonByteArray(header, line);
+            byte[] jsonByteArray = convertCsvToJsonByteArray(line);
             lineContext.rawSource(jsonByteArray);
         } else {
+            byte[] lineAsByteArray = line.getBytes(StandardCharsets.UTF_8);
             lineContext.rawSource(lineAsByteArray);
         }
     }
@@ -66,7 +61,7 @@ public class LineProcessor {
         return (inputFormat == InputFormat.CSV) || currentUri.toString().endsWith(".csv");
     }
 
-    private byte[] convertCsvToJsonByteArray(String header, String lineAsByteArray) throws IOException {
-        return CSVLineParser.parse(header, lineAsByteArray);
+    private byte[] convertCsvToJsonByteArray(String line) throws IOException {
+        return CSVLineParser.parse(line);
     }
 }

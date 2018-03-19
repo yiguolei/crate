@@ -27,6 +27,7 @@ import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvParser;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -37,45 +38,49 @@ public class CSVLineParser {
 
     private static CsvMapper csvMapper = new CsvMapper();
     private static List<Object> keyList;
+    private static ObjectMapper objectMapper = new ObjectMapper();
 
     public static void parseHeader(String header) throws IOException {
-        keyList = csvMapper.enable(CsvParser.Feature.TRIM_SPACES).readerWithSchemaFor(String.class).readValues(header).readAll();
+        keyList = csvMapper
+            .enable(CsvParser.Feature.TRIM_SPACES)
+            .readerWithSchemaFor(String.class)
+            .readValues(header.getBytes(StandardCharsets.UTF_8))
+            .readAll();
 
-        Set<Object> set  = new HashSet<>(keyList);
-        keyList.removeAll(Collections.singleton(""));
+        Set<Object> keySet  = new HashSet<>(keyList);
+        if (keySet.contains("")) {
+            keySet.removeAll(Collections.singleton(""));
+        }
 
-        if (set.size() != keyList.size()) {
+        if (keySet.size() != keyList.size()) {
             throw new IllegalArgumentException("Invalid keys!");
         }
     }
 
-    public static byte[] parse(String header, String row) throws IOException {
-        List<Object> recordList = csvMapper.enable(CsvParser.Feature.TRIM_SPACES).readerWithSchemaFor(String.class).readValues(row).readAll();
-        return convertCSVToJson(keyList, recordList);
+    public static byte[] parse(String row) throws IOException {
+        List<Object> recordList = csvMapper
+            .enable(CsvParser.Feature.TRIM_SPACES)
+            .readerWithTypedSchemaFor(String.class)
+            .readValues(row.getBytes(StandardCharsets.UTF_8))
+            .readAll();
 
+        return convertCSVToMap(recordList);
     }
 
-    private static byte[] convertCSVToJson(List<Object> keyList, List<Object> recordList) throws JsonProcessingException {
+    private static byte[] convertCSVToMap(List<Object> recordList) throws JsonProcessingException {
 
         if (recordList.isEmpty()) {
-            return new ObjectMapper().writeValueAsBytes(Collections.emptyMap());
+            return objectMapper.writeValueAsBytes(Collections.emptyMap());
         }
 
-        if (keyList.size() != recordList.size()) {
+        if (keyList == null || keyList.size() != recordList.size()) {
             throw new IllegalArgumentException("Number of row entries is not equal to the number of columns");
         }
 
-        HashMap<String, String> map = new HashMap<>();
+        HashMap<Object, Object> csvAsMap = new HashMap<>();
         for (int i = 0; i < keyList.size(); i++) {
-            map.put(keyList.get(i).toString(), recordList.get(i).toString());
+            csvAsMap.put(keyList.get(i), recordList.get(i));
         }
-
-        return new ObjectMapper().writeValueAsBytes(map);
+        return objectMapper.writeValueAsBytes(csvAsMap);
     }
-
-
-
 }
-
-
-

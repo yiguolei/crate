@@ -73,20 +73,6 @@ public class LineProcessorTest {
         thenLineHasNotBeenRead();
     }
 
-    @Test
-    public void process_givenFileIsCsv_thenParsesAsCSV() throws URISyntaxException, IOException {
-        givenURIWithExtension("file.csv");
-        givenBufferedReader();
-
-        whenCalledWith("anyString", inputFormat, uri);
-
-    }
-
-    @Test
-    public void process_givenFileIsJson_thenDoesNotParseAsCSV() {
-
-    }
-
     private void givenBufferedReader() {
         Reader reader = new StringReader("some/string");
         bufferedReader = new BufferedReader(reader);

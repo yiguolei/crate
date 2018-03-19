@@ -155,6 +155,6 @@ public class CSVLineParserTest {
     }
 
     private void whenParseIsCalled() throws IOException {
-        result = CSVLineParser.parse(headerByteArray, rowByteArray);
+        result = CSVLineParser.parse(rowByteArray);
     }
 }
