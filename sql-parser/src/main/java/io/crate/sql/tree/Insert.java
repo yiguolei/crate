@@ -23,6 +23,7 @@ package io.crate.sql.tree;
 
 import com.google.common.base.Objects;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 public abstract class Insert extends Statement {
@@ -40,7 +41,7 @@ public abstract class Insert extends Statement {
     protected final List<String> columns;
 
 
-    Insert(Table table, List<String> columns, DuplicateKeyType duplicateKeyType, List<Assignment> onDuplicateKeyAssignments) {
+    Insert(Table table, List<String> columns, DuplicateKeyType duplicateKeyType, @Nullable List<Assignment> onDuplicateKeyAssignments) {
         this.table = table;
         this.columns = columns;
         this.duplicateKeyType = duplicateKeyType;
@@ -59,6 +60,12 @@ public abstract class Insert extends Statement {
         return duplicateKeyType;
     }
 
+    /**
+     *  If null, no duplicate key behavior has been specified.
+     *  Otherwise, perform the updates in the list.
+     *  List may be empty in case nothing is done on duplicates.
+     */
+    @Nullable
     public List<Assignment> onDuplicateKeyAssignments() {
         return onDuplicateKeyAssignments;
     }

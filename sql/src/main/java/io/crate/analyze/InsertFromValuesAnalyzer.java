@@ -271,7 +271,7 @@ class InsertFromValuesAnalyzer extends AbstractInsertAnalyzer {
                                ValuesResolver valuesResolver,
                                ExpressionAnalyzer valuesAwareExpressionAnalyzer,
                                ValuesList node,
-                               List<Assignment> assignments,
+                               @javax.annotation.Nullable List<Assignment> onDuplicateKeyAssignments,
                                InsertFromValuesAnalyzedStatement statement,
                                ParameterContext parameterContext,
                                ReferenceToLiteralConverter refToLiteral) {
@@ -294,7 +294,7 @@ class InsertFromValuesAnalyzer extends AbstractInsertAnalyzer {
                         valuesResolver,
                         valuesAwareExpressionAnalyzer,
                         node,
-                        assignments,
+                        onDuplicateKeyAssignments,
                         statement,
                         refToLiteral,
                         numPks,
@@ -312,7 +312,7 @@ class InsertFromValuesAnalyzer extends AbstractInsertAnalyzer {
                     valuesResolver,
                     valuesAwareExpressionAnalyzer,
                     node,
-                    assignments,
+                    onDuplicateKeyAssignments,
                     statement,
                     refToLiteral,
                     numPks,
@@ -333,7 +333,7 @@ class InsertFromValuesAnalyzer extends AbstractInsertAnalyzer {
                            ValuesResolver valuesResolver,
                            ExpressionAnalyzer valuesAwareExpressionAnalyzer,
                            ValuesList node,
-                           List<Assignment> assignments,
+                           @javax.annotation.Nullable List<Assignment> onDuplicateKeyAssignments,
                            InsertFromValuesAnalyzedStatement context,
                            ReferenceToLiteralConverter refToLiteral,
                            int numPrimaryKeys,
@@ -402,13 +402,13 @@ class InsertFromValuesAnalyzer extends AbstractInsertAnalyzer {
             }
         }
 
-        if (!assignments.isEmpty()) {
+        if (onDuplicateKeyAssignments != null) {
             valuesResolver.insertValues = insertValues;
             valuesResolver.columns = context.columns();
-            Symbol[] onDupKeyAssignments = new Symbol[assignments.size()];
-            valuesResolver.assignmentColumns = new ArrayList<>(assignments.size());
-            for (int i = 0; i < assignments.size(); i++) {
-                Assignment assignment = assignments.get(i);
+            Symbol[] onDupKeyAssignments = new Symbol[onDuplicateKeyAssignments.size()];
+            valuesResolver.assignmentColumns = new ArrayList<>(onDuplicateKeyAssignments.size());
+            for (int i = 0; i < onDuplicateKeyAssignments.size(); i++) {
+                Assignment assignment = onDuplicateKeyAssignments.get(i);
                 Reference columnName = tableRelation.resolveField(
                     (Field) expressionAnalyzer.convert(assignment.columnName(), expressionAnalysisContext));
                 assert columnName != null : "columnName must not be null";

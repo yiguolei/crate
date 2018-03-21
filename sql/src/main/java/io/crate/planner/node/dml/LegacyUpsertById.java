@@ -152,7 +152,7 @@ public class LegacyUpsertById implements Plan {
     public void add(String index,
                     String id,
                     String routing,
-                    Symbol[] updateAssignments,
+                    @Nullable Symbol[] updateAssignments,
                     @Nullable Long version,
                     @Nullable Object[] insertValues) {
         items.add(new Item(index, id, routing, updateAssignments, version, insertValues));

@@ -39,7 +39,6 @@ import io.crate.metadata.TableIdent;
 import io.crate.metadata.doc.DocTableInfo;
 import io.crate.metadata.table.ColumnPolicy;
 import io.crate.metadata.table.TestingTableInfo;
-import io.crate.sql.tree.Insert;
 import io.crate.test.integration.CrateDummyClusterServiceUnitTest;
 import io.crate.testing.SQLExecutor;
 import io.crate.types.DataTypes;
@@ -63,6 +62,7 @@ import static io.crate.testing.SymbolMatchers.isReference;
 import static org.hamcrest.Matchers.arrayContaining;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.emptyArray;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.instanceOf;
@@ -1122,6 +1122,13 @@ public class InsertFromValuesAnalyzerTest extends CrateDummyClusterServiceUnitTe
         } catch (ColumnValidationException e) {
             assertThat(e.getMessage(), containsString("Validation failed for id: Updating a clustered-by column is not supported"));
         }
+    }
+
+    @Test
+    public void testUpdateOnConflictDoNothingProducesEmptyUpdateAssignments() {
+        InsertFromValuesAnalyzedStatement statement =
+            e.analyze("insert into users (id, name) values (1, 'Jon') on conflict DO NOTHING");
+        assertThat(statement.onDuplicateKeyAssignments(), contains(emptyArray()));
     }
 
     @Test

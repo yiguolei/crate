@@ -21,17 +21,16 @@
 
 package io.crate.analyze;
 
+import io.crate.exceptions.ColumnUnknownException;
+import io.crate.exceptions.ColumnValidationException;
+import io.crate.expression.scalar.SubstrFunction;
 import io.crate.expression.symbol.Function;
 import io.crate.expression.symbol.InputColumn;
 import io.crate.expression.symbol.Symbol;
-import io.crate.exceptions.ColumnUnknownException;
-import io.crate.exceptions.ColumnValidationException;
 import io.crate.metadata.Reference;
 import io.crate.metadata.Schemas;
 import io.crate.metadata.TableIdent;
 import io.crate.metadata.table.TestingTableInfo;
-import io.crate.expression.scalar.SubstrFunction;
-import io.crate.expression.scalar.cast.CastFunctionResolver;
 import io.crate.test.integration.CrateDummyClusterServiceUnitTest;
 import io.crate.testing.SQLExecutor;
 import io.crate.types.DataTypes;
@@ -50,6 +49,7 @@ import static io.crate.testing.SymbolMatchers.isReference;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 
 public class InsertFromSubQueryAnalyzerTest extends CrateDummyClusterServiceUnitTest {
 
@@ -263,6 +263,15 @@ public class InsertFromSubQueryAnalyzerTest extends CrateDummyClusterServiceUnit
         } catch (ColumnValidationException e) {
             assertThat(e.getMessage(), containsString("Updating a primary key is not supported"));
         }
+    }
+
+    @Test
+    public void testUpdateOnConflictDoNothingProducesEmptyUpdateAssignments() {
+        InsertFromSubQueryAnalyzedStatement statement =
+            e.analyze("insert into users (id, name) (select 1, 'Jon') on conflict DO NOTHING");
+        Map<Reference, Symbol> duplicateKeyAssignments = statement.onDuplicateKeyAssignments();
+        assertThat(duplicateKeyAssignments, is(notNullValue()));
+        assertThat(duplicateKeyAssignments.size(), is(0));
     }
 
     @Test

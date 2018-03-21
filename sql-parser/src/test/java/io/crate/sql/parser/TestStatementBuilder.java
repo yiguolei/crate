@@ -78,7 +78,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 public class TestStatementBuilder {
 
@@ -784,12 +783,7 @@ public class TestStatementBuilder {
         printStatement("insert into t (a, b) values (1, 2), (3, 4) on duplicate key update a = values (a) + 1, b = 4");
         printStatement("insert into t (a, b) values (1, 2), (3, 4) on duplicate key update a = values (a) + 1, b = values(b) - 2");
 
-        try {
-            printStatement("insert into t (a, b) values (1, 2) on conflict do nothing");
-            fail("Should have failed to parse statement.");
-        } catch (UnsupportedOperationException e) {
-            // this is what we want
-        }
+        printStatement("insert into t (a, b) values (1, 2) on conflict do nothing");
         printStatement("insert into t (a, b) values (1, 2) on conflict do update set a = a + 1");
         printStatement("insert into t (a, b) values (1, 2) on conflict do update set a = a + 1, b = 3");
         printStatement("insert into t (a, b) values (1, 2), (3, 4) on conflict do update set a = excluded.a + 1, b = 4");

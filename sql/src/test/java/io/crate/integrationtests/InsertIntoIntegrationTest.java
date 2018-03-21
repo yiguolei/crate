@@ -719,6 +719,40 @@ public class InsertIntoIntegrationTest extends SQLTransportIntegrationTest {
     }
 
     @Test
+    public void testInsertOnConflictDoNothing() {
+        execute("create table t1 (id integer primary key, other string) clustered into 1 shards");
+
+        execute("insert into t1 (id, other) values (1, 'test'), (2, 'test2')");
+        refresh();
+
+        execute("insert into t1 (id, other) values (1, 'updated') ON CONFLICT DO NOTHING");
+        // the statement below will also succeed without ON CONFLICT DO NOTHING because we allow errors for multiple values
+        execute("insert into t1 (id, other) values (1, 'updated'), (3, 'new') ON CONFLICT DO NOTHING");
+        refresh();
+
+        execute("select id, other from t1 order by id");
+        System.out.println(TestingHelpers.printedTable(response.rows()));
+        assertThat(TestingHelpers.printedTable(response.rows()), is(
+               "1| test\n" +
+               "2| test2\n" +
+               "3| new\n")
+        );
+
+        // the statement below will also succeed without ON CONFLICT DO NOTHING because we allow errors for multiple values
+        execute("insert into t1 (id, other) (select * from unnest([1, 4], ['updated', 'another'])) ON CONFLICT DO NOTHING");
+        refresh();
+
+        execute("select id, other from t1 order by id");
+        System.out.println(TestingHelpers.printedTable(response.rows()));
+        assertThat(TestingHelpers.printedTable(response.rows()), is(
+            "1| test\n" +
+            "2| test2\n" +
+            "3| new\n" +
+            "4| another\n")
+        );
+    }
+
+    @Test
     public void testInsertFromSubQueryWithVersion() throws Exception {
         execute("create table users (name string) clustered into 1 shards");
 

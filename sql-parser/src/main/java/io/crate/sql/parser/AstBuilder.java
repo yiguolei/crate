@@ -415,19 +415,24 @@ class AstBuilder extends SqlBaseBaseVisitor<Node> {
         }
 
         final Insert.DuplicateKeyType duplicateKeyType;
-        final List<SqlBaseParser.AssignmentContext> assignment;
+        final List<SqlBaseParser.AssignmentContext> duplicateKeyAssignments;
         if (context.onDuplicate() != null) {
             duplicateKeyType = Insert.DuplicateKeyType.ON_DUPLICATE_KEY_UPDATE;
-            assignment = context.onDuplicate().assignment();
+            // perform updates on duplicate key
+            duplicateKeyAssignments = context.onDuplicate().assignment();
         } else if (context.onConflict() != null) {
             if (context.onConflict().NOTHING() != null) {
-                throw new UnsupportedOperationException("ON CONFLICT DO NOTHING is not implemented yet.");
+                // do nothing on duplicate key
+                duplicateKeyAssignments = Collections.emptyList();
+            } else {
+                // perform updates on duplicate key
+                duplicateKeyAssignments = context.onConflict().assignment();
             }
             duplicateKeyType = Insert.DuplicateKeyType.ON_CONFLICT_DO_UPDATE_SET;
-            assignment = context.onConflict().assignment();
         } else {
+            // no duplicate key behavior specified
             duplicateKeyType = Insert.DuplicateKeyType.NONE;
-            assignment = Collections.emptyList();
+            duplicateKeyAssignments = null;
         }
 
         if (context.insertSource().VALUES() != null) {
@@ -436,14 +441,14 @@ class AstBuilder extends SqlBaseBaseVisitor<Node> {
                 visitCollection(context.insertSource().values(), ValuesList.class),
                 columns,
                 duplicateKeyType,
-                visitCollection(assignment, Assignment.class));
+                duplicateKeyAssignments != null ? visitCollection(duplicateKeyAssignments, Assignment.class) : null);
         }
         return new InsertFromSubquery(
             table,
             (Query) visit(context.insertSource().query()),
             columns,
             duplicateKeyType,
-            visitCollection(assignment, Assignment.class));
+            duplicateKeyAssignments != null ? visitCollection(duplicateKeyAssignments, Assignment.class) : null);
     }
 
     @Override

@@ -72,6 +72,11 @@ public class ShardUpsertRequestTest extends CrateUnitTest {
             null,
             new Object[]{99, new BytesRef("Marvin")},
             null));
+        request.add(42, new ShardUpsertRequest.Item(
+            "99",
+            new Symbol[0],
+            new Object[]{99, new BytesRef("Marvin")},
+            null));
         request.add(5, new ShardUpsertRequest.Item(
             "42",
             new Symbol[]{Literal.of(42), Literal.of("Deep Thought")},

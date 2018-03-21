@@ -54,6 +54,7 @@ import io.crate.sql.tree.ParameterExpression;
 import io.crate.types.DataType;
 import io.crate.types.DataTypes;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -233,6 +234,7 @@ class InsertFromSubQueryAnalyzer {
         }
     }
 
+    @Nullable
     static Map<Reference, Symbol> getUpdateAssignments(Functions functions,
                                                        DocTableRelation targetTable,
                                                        List<Reference> targetCols,
@@ -240,10 +242,13 @@ class InsertFromSubQueryAnalyzer {
                                                        TransactionContext txnCtx,
                                                        Function<ParameterExpression, Symbol> paramConverter,
                                                        Insert.DuplicateKeyType duplicateKeyType,
-                                                       List<Assignment> assignments) {
-        if (assignments.isEmpty()) {
+                                                       @Nullable List<Assignment> onDuplicateKeyAssignments) {
+        if (onDuplicateKeyAssignments == null) {
+            return null;
+        } else if (onDuplicateKeyAssignments.isEmpty()) {
             return Collections.emptyMap();
         }
+
         ExpressionAnalysisContext exprCtx = new ExpressionAnalysisContext();
         ValuesResolver valuesResolver = new ValuesResolver(targetTable, targetCols);
         final FieldProvider fieldProvider;
@@ -256,8 +261,8 @@ class InsertFromSubQueryAnalyzer {
             functions, txnCtx, paramConverter, fieldProvider, valuesResolver, duplicateKeyType);
         EvaluatingNormalizer normalizer = new EvaluatingNormalizer(functions, RowGranularity.CLUSTER, null, targetTable);
 
-        HashMap<Reference, Symbol> updateAssignments = new HashMap<>(assignments.size());
-        for (Assignment assignment : assignments) {
+        Map<Reference, Symbol> updateAssignments = new HashMap<>(onDuplicateKeyAssignments.size());
+        for (Assignment assignment : onDuplicateKeyAssignments) {
             Reference targetCol = requireNonNull(
                 targetTable.resolveField((Field) exprAnalyzer.convert(assignment.columnName(), exprCtx)),
                 "resolveField must work on a field that was just resolved"
@@ -279,8 +284,10 @@ class InsertFromSubQueryAnalyzer {
                                                             TransactionContext transactionContext,
                                                             FieldProvider fieldProvider,
                                                             Insert.DuplicateKeyType duplicateKeyType,
-                                                            List<Assignment> assignments) {
-        if (assignments.isEmpty()) {
+                                                            @Nullable List<Assignment> onDuplicateKeyAssignments) {
+        if (onDuplicateKeyAssignments == null) {
+            return null;
+        } else if (onDuplicateKeyAssignments.isEmpty()) {
             return Collections.emptyMap();
         }
 
@@ -288,7 +295,7 @@ class InsertFromSubQueryAnalyzer {
             functions, transactionContext, parameterContext, fieldProvider, null, Operation.UPDATE);
 
         return getUpdateAssignments(
-            functions, tableRelation, targetColumns, expressionAnalyzer, transactionContext, parameterContext,
-            duplicateKeyType, assignments);
+            functions, tableRelation, targetColumns, expressionAnalyzer, transactionContext, parameterContext, 
+            duplicateKeyType, onDuplicateKeyAssignments);
     }
 }

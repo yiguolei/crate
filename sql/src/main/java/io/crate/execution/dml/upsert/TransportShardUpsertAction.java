@@ -163,7 +163,9 @@ public class TransportShardUpsertAction extends TransportShardAction<ShardUpsert
                     item.insertValues() != null, // try insert first
                     notUsedNonGeneratedColumns,
                     0);
-                shardResponse.add(location);
+                if (translogLocation != null) {
+                    shardResponse.add(location);
+                }
             } catch (Exception e) {
                 if (retryPrimaryException(e)) {
                     Throwables.propagate(e);
@@ -217,6 +219,7 @@ public class TransportShardUpsertAction extends TransportShardAction<ShardUpsert
         return new WriteReplicaResult<>(request, location, null, indexShard, logger);
     }
 
+    @Nullable
     protected Translog.Location indexItem(DocTableInfo tableInfo,
                                           ShardUpsertRequest request,
                                           ShardUpsertRequest.Item item,
@@ -258,7 +261,13 @@ public class TransportShardUpsertAction extends TransportShardAction<ShardUpsert
         Exception failure = indexResult.getFailure();
         if (failure != null) {
             if (failure instanceof VersionConflictEngineException) {
-                if (item.updateAssignments() != null) {
+                Symbol[] onDuplicateKeyUpdateAssignments = item.updateAssignments();
+                if (onDuplicateKeyUpdateAssignments != null) {
+                    if (onDuplicateKeyUpdateAssignments.length == 0) {
+                        // do nothing
+                        item.source(null);
+                        return null;
+                    }
                     if (tryInsertFirst) {
                         // insert failed, document already exists, try update
                         return indexItem(tableInfo, request, item, indexShard, false, notUsedNonGeneratedColumns, 0);
