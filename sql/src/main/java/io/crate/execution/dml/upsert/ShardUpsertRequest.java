@@ -285,8 +285,8 @@ public class ShardUpsertRequest extends ShardRequest<ShardUpsertRequest, ShardUp
 
         public Item(StreamInput in, @Nullable Streamer[] insertValueStreamers) throws IOException {
             super(in);
-            int assignmentsSize = in.readVInt();
-            if (assignmentsSize >= 0) {
+            if (in.readBoolean()) {
+                int assignmentsSize = in.readVInt();
                 updateAssignments = new Symbol[assignmentsSize];
                 for (int i = 0; i < assignmentsSize; i++) {
                     updateAssignments[i] = Symbols.fromStream(in);
@@ -308,12 +308,13 @@ public class ShardUpsertRequest extends ShardRequest<ShardUpsertRequest, ShardUp
         public void writeTo(StreamOutput out, @Nullable Streamer[] insertValueStreamers) throws IOException {
             super.writeTo(out);
             if (updateAssignments != null) {
+                out.writeBoolean(true);
                 out.writeVInt(updateAssignments.length);
                 for (Symbol updateAssignment : updateAssignments) {
                     Symbols.toStream(updateAssignment, out);
                 }
             } else {
-                out.writeVInt(-1);
+                out.writeBoolean(false);
             }
             // Stream References
             if (insertValues != null) {
