@@ -60,9 +60,9 @@ import io.crate.sql.tree.ParameterExpression;
 import io.crate.sql.tree.ValuesList;
 import io.crate.types.DataType;
 import org.apache.lucene.util.BytesRef;
-import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.lucene.BytesRefs;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -271,7 +271,7 @@ class InsertFromValuesAnalyzer extends AbstractInsertAnalyzer {
                                ValuesResolver valuesResolver,
                                ExpressionAnalyzer valuesAwareExpressionAnalyzer,
                                ValuesList node,
-                               @javax.annotation.Nullable List<Assignment> onDuplicateKeyAssignments,
+                               @Nullable List<Assignment> onDuplicateKeyAssignments,
                                InsertFromValuesAnalyzedStatement statement,
                                ParameterContext parameterContext,
                                ReferenceToLiteralConverter refToLiteral) {
