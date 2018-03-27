@@ -731,7 +731,6 @@ public class InsertIntoIntegrationTest extends SQLTransportIntegrationTest {
         refresh();
 
         execute("select id, other from t1 order by id");
-        System.out.println(TestingHelpers.printedTable(response.rows()));
         assertThat(TestingHelpers.printedTable(response.rows()), is(
                "1| test\n" +
                "2| test2\n" +
@@ -743,7 +742,6 @@ public class InsertIntoIntegrationTest extends SQLTransportIntegrationTest {
         refresh();
 
         execute("select id, other from t1 order by id");
-        System.out.println(TestingHelpers.printedTable(response.rows()));
         assertThat(TestingHelpers.printedTable(response.rows()), is(
             "1| test\n" +
             "2| test2\n" +
