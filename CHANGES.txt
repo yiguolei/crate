@@ -60,6 +60,10 @@ Breaking Changes
 Changes
 =======
 
+- Changed primary key constraint of the ``information_schema.columns`` table to
+  ``(TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME)`` for SQL standard
+  compliance.
+
 - Changed primary key of the ``information_schema.tables`` table to
   ``(TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME)`` for SQL standard conformity.
 
