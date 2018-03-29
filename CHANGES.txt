@@ -61,6 +61,10 @@ Changes
 =======
 
 - Changed primary key constraint of the
+  ``information_schema.table_constraints`` table to ``(CONSTRAINT_CATALOG,
+  CONSTRAINT_SCHEMA, CONSTRAINT_NAME)`` for SQL compliance.
+
+- Changed primary key constraint of the
   ``information_schema.referential_constraints`` table to
   ``(CONSTRAINT_CATALOG, CONSTRAINT_SCHEMA, CONSTRAINT_NAME)`` for SQL
   compliance.
